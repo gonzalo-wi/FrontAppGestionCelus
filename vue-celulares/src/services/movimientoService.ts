@@ -1,8 +1,6 @@
-import axios from 'axios';
+import http from './http';
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-});
+const api = http;
 
 
 export interface Movimiento {
@@ -14,6 +12,4 @@ export interface Movimiento {
 }
 
 // ✅ Función para crear un movimiento
-export const crearMovimiento = (movimiento: Movimiento) => {
-  return api.post<Movimiento>('/movimientos', movimiento);
-};
+export const crearMovimiento = (movimiento: Movimiento) => api.post<Movimiento>('/api/movimientos', movimiento);

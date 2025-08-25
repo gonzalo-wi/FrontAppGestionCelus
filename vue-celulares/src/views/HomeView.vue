@@ -1,8 +1,13 @@
 
 <template>
   <div class="relative overflow-hidden">
-    <!-- Hero Section -->
-    <div class="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 relative">
+    <!-- Dashboard para usuarios normales -->
+    <div v-if="!isAdmin" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <DashboardUsuario />
+    </div>
+
+    <!-- Hero Section para admins -->
+    <div v-else class="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 relative">
       <!-- Background Pattern -->
       <div class="absolute inset-0 bg-black opacity-10"></div>
       <div class="absolute inset-0 opacity-30">
@@ -19,15 +24,18 @@
           <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
             CellControl
             <span class="block text-3xl md:text-4xl lg:text-5xl font-normal text-blue-100 mt-2">
-              Sistema de Gestión Inteligente
+              {{ isAdmin ? 'Sistema de Gestión Inteligente' : 'Portal de Solicitudes' }}
             </span>
           </h1>
           <p class="text-xl md:text-2xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Plataforma completa para la administración de inventario de celulares, 
-            control de usuarios y seguimiento de movimientos en tiempo real
+            {{ isAdmin 
+              ? 'Plataforma completa para la administración de inventario de celulares, control de usuarios y seguimiento de movimientos en tiempo real'
+              : 'Crea y gestiona tus solicitudes de celulares de manera rápida y eficiente. Mantén el control de tus requests y estados.'
+            }}
           </p>
           <div class="flex flex-col sm:flex-row gap-6 justify-center">
             <router-link 
+              v-if="isAdmin"
               to="/celulares" 
               class="group inline-flex items-center px-8 py-4 text-lg font-semibold rounded-xl text-blue-700 bg-white hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
@@ -40,6 +48,7 @@
               </svg>
             </router-link>
             <router-link 
+              v-if="isAdmin"
               to="/usuarios" 
               class="group inline-flex items-center px-8 py-4 text-lg font-semibold rounded-xl text-white border-2 border-white hover:bg-white hover:text-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
@@ -47,6 +56,20 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
               </svg>
               Gestionar Usuarios
+              <svg class="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </router-link>
+            <!-- Botones para usuarios normales -->
+            <router-link 
+              v-if="!isAdmin"
+              to="/mis-solicitudes" 
+              class="group inline-flex items-center px-8 py-4 text-lg font-semibold rounded-xl text-blue-700 bg-white hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              <svg class="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Mis Solicitudes
               <svg class="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
@@ -63,8 +86,8 @@
       </div>
     </div>
 
-    <!-- Features Section -->
-    <div class="py-20 bg-white">
+    <!-- Features Section para admins -->
+    <div v-if="isAdmin" class="py-20 bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <h2 class="text-4xl font-bold text-gray-900 mb-6">Características Principales</h2>
@@ -123,8 +146,8 @@
       </div>
     </div>
 
-    <!-- Stats Section -->
-    <div class="bg-gradient-to-r from-gray-50 to-gray-100 py-20">
+    <!-- Stats Section para admins -->
+    <div v-if="isAdmin" class="bg-gradient-to-r from-gray-50 to-gray-100 py-20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
           <h2 class="text-3xl font-bold text-gray-900 mb-4">Estadísticas en Tiempo Real</h2>
@@ -207,8 +230,12 @@
           <p class="text-lg text-gray-600">Accede directamente a las funciones más utilizadas</p>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <router-link to="/celulares" class="group bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100 hover:border-blue-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <router-link 
+            v-if="isAdmin"
+            to="/celulares" 
+            class="group bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100 hover:border-blue-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+          >
             <div class="bg-blue-600 rounded-xl w-16 h-16 flex items-center justify-center mb-6 group-hover:bg-blue-700 transition-colors">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -219,7 +246,11 @@
             <span class="text-blue-600 font-medium group-hover:text-blue-700">Ir a formulario →</span>
           </router-link>
           
-          <router-link to="/usuarios" class="group bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-100 hover:border-green-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+          <router-link 
+            v-if="isAdmin"
+            to="/usuarios" 
+            class="group bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-100 hover:border-green-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+          >
             <div class="bg-green-600 rounded-xl w-16 h-16 flex items-center justify-center mb-6 group-hover:bg-green-700 transition-colors">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
@@ -230,15 +261,41 @@
             <span class="text-green-600 font-medium group-hover:text-green-700">Ir a formulario →</span>
           </router-link>
           
-          <div class="group bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-8 border border-purple-100 hover:border-purple-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer" @click="cargarEstadisticas">
+          <router-link to="/mis-solicitudes" class="group bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-8 border border-orange-100 hover:border-orange-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+            <div class="bg-orange-600 rounded-xl w-16 h-16 flex items-center justify-center mb-6 group-hover:bg-orange-700 transition-colors">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">{{ isAdmin ? 'Gestionar Solicitudes' : 'Mis Solicitudes' }}</h3>
+            <p class="text-gray-600 mb-4">{{ isAdmin ? 'Administra todas las solicitudes del sistema' : 'Crea y gestiona tus solicitudes de celulares' }}</p>
+            <span class="text-orange-600 font-medium group-hover:text-orange-700">{{ isAdmin ? 'Ver todas' : 'Crear solicitud' }} →</span>
+          </router-link>
+          
+          <router-link 
+            v-if="isAdmin"
+            to="/estadisticas" 
+            class="group bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-8 border border-purple-100 hover:border-purple-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+          >
             <div class="bg-purple-600 rounded-xl w-16 h-16 flex items-center justify-center mb-6 group-hover:bg-purple-700 transition-colors">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Ver Estadísticas</h3>
+            <p class="text-gray-600 mb-4">Dashboard con análisis y reportes</p>
+            <span class="text-purple-600 font-medium group-hover:text-purple-700">Ver dashboard →</span>
+          </router-link>
+          
+          <div class="group bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-8 border border-gray-100 hover:border-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer" @click="cargarEstadisticas">
+            <div class="bg-gray-600 rounded-xl w-16 h-16 flex items-center justify-center mb-6 group-hover:bg-gray-700 transition-colors">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-3">Actualizar Datos</h3>
             <p class="text-gray-600 mb-4">Refresca las estadísticas del sistema</p>
-            <span class="text-purple-600 font-medium group-hover:text-purple-700">Actualizar →</span>
+            <span class="text-gray-600 font-medium group-hover:text-gray-700">Actualizar →</span>
           </div>
         </div>
       </div>
@@ -247,9 +304,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { celularService, obtenerMovimientos } from '@/services/celularService.ts';
 import { usuarioService } from '@/services/usuarioService.ts';
+import { authService } from '@/services/authService';
+import DashboardUsuario from '@/components/DashboardUsuario.vue';
 
 const stats = ref({
   celulares: 0,
@@ -258,6 +317,9 @@ const stats = ref({
   asignados: 0,
   loading: true
 });
+
+const currentUser = computed(() => authService.getCurrentUser());
+const isAdmin = computed(() => authService.isAdmin());
 
 const cargarEstadisticas = async () => {
   stats.value.loading = true;

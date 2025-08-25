@@ -1,4 +1,4 @@
-import axios from 'axios';
+import http from './http';
 import type { Celular } from './celularService';
 
 export type Region = 'NORTE' | 'ESTE' | 'SUR' | 'OESTE' | 'LA_PLATA' | 'NAFA';
@@ -8,37 +8,38 @@ export interface Usuario {
   numReparto: string;
   region: Region;
   zona: Zona;
+  numeroLinea?: string | null;
+  cantCelularesRotos?: number;
   celular?: Celular | null;
 }
 
-const api = axios.create({
-  baseURL: '/api',
-});
+// Usamos http (axios compartido con interceptor de Authorization)
+const api = http;
 
 export const usuarioService = {
   // Obtener todos los usuarios
   obtenerTodos() {
-    return api.get<Usuario[]>('/usuarios');
+  return api.get<Usuario[]>('/api/usuarios');
   },
 
   // Obtener usuario por ID
   obtenerPorId(numReparto: string) {
-    return api.get<Usuario>(`/usuarios/${numReparto}`);
+  return api.get<Usuario>(`/api/usuarios/${numReparto}`);
   },
 
   // Crear usuario
   crear(usuario: Usuario) {
-    return api.post<Usuario>('/usuarios', usuario);
+  return api.post<Usuario>('/api/usuarios', usuario);
   },
 
   // Actualizar usuario
   actualizar(numReparto: string, usuario: Usuario) {
-    return api.put<Usuario>(`/usuarios/${numReparto}`, usuario);
+  return api.put<Usuario>(`/api/usuarios/${numReparto}`, usuario);
   },
 
   // Eliminar usuario
   eliminar(numReparto: string) {
-    return api.delete<void>(`/usuarios/${numReparto}`);
+  return api.delete<void>(`/api/usuarios/${numReparto}`);
   }
 };
 
@@ -47,3 +48,25 @@ export const obtenerUsuarios = usuarioService.obtenerTodos;
 export const crearUsuario = usuarioService.crear;
 
 export default api;
+
+// Obtener la flota (usuarios de mi región autenticada)
+export const obtenerMiFlota = () => {
+  return api.get<Usuario[]>(`/api/usuarios/mi-flota`);
+};
+
+// Obtener mis solicitudes (solicitudes del usuario autenticado)
+export const obtenerMisSolicitudes = () => {
+  return api.get(`/api/usuarios/me/solicitudes`);
+};
+
+// Obtener estadísticas de mi región
+export const obtenerEstadisticasMiRegion = (fechaDesde?: string, fechaHasta?: string) => {
+  const params = new URLSearchParams();
+  if (fechaDesde) params.append('fechaDesde', fechaDesde);
+  if (fechaHasta) params.append('fechaHasta', fechaHasta);
+  
+  const queryString = params.toString();
+  const url = `/api/estadisticas/mi-region${queryString ? '?' + queryString : ''}`;
+  
+  return api.get(url);
+};

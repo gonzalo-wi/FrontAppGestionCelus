@@ -30,14 +30,16 @@ const zonas = [
 const form = reactive({
   numReparto: '',
   region: '',
-  zona: ''
+  zona: '',
+  numeroLinea: ''
 });
 
 // Configuración de la tabla
 const columns = [
   { key: 'numReparto', title: 'Num. Reparto' },
   { key: 'region', title: 'Región' },
-  { key: 'zona', title: 'Zona' }
+  { key: 'zona', title: 'Zona' },
+  { key: 'numeroLinea', title: 'Línea' }
 ];
 
 // Notificaciones
@@ -66,6 +68,7 @@ const resetForm = () => {
   form.numReparto = '';
   form.region = '';
   form.zona = '';
+  form.numeroLinea = '';
 };
 
 const openCreateModal = () => {
@@ -80,6 +83,7 @@ const openEditModal = (usuario) => {
   form.numReparto = usuario.numReparto;
   form.region = usuario.region;
   form.zona = usuario.zona;
+  form.numeroLinea = usuario.numeroLinea || '';
   showModal.value = true;
 };
 
@@ -118,7 +122,8 @@ const guardarUsuario = async () => {
     const usuario = {
       numReparto: form.numReparto,
       region: form.region,
-      zona: form.zona
+      zona: form.zona,
+      numeroLinea: form.numeroLinea || null
     };
 
     if (isEditing.value) {
@@ -247,6 +252,19 @@ onMounted(() => {
             <option value="" disabled>Seleccione una zona</option>
             <option v-for="z in zonas" :key="z" :value="z">{{ z.replace('_', ' ') }}</option>
           </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Línea
+          </label>
+          <input 
+            v-model="form.numeroLinea"
+            type="text" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 15-1234-5678"
+          />
+          <p class="mt-1 text-sm text-gray-500">Campo opcional. Número de línea telefónica asignada</p>
         </div>
       </form>
     </Modal>
