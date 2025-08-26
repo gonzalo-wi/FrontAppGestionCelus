@@ -95,9 +95,12 @@
           @change="aplicarFiltros"
         >
           <option value="">Todas las regiones</option>
-          <option value="REGION_1">Región 1</option>
-          <option value="REGION_2">Región 2</option>
-          <option value="REGION_3">Región 3</option>
+          <option value="NORTE">NORTE</option>
+          <option value="SUR">SUR</option>
+          <option value="ESTE">ESTE</option>
+          <option value="OESTE">OESTE</option>
+          <option value="NAFA">NAFA</option>
+          <option value="LA_PLATA">LA PLATA</option>
         </select>
       </div>
 

@@ -46,27 +46,9 @@ export const celularService = {
   },
 
   // Actualizar celular completo
-  // TEMPORAL: Usando endpoints específicos hasta que se agregue PUT /{numeroSerie}
-  async actualizar(numeroSerie: number, celular: Celular) {
-    console.log('Actualizando celular:', { numeroSerie, celular });
-    
-    try {
-      // Actualizar estado si cambió
-      if (celular.estado) {
-        await api.put(`${API_URL}/celulares/${numeroSerie}/estado`, { estado: celular.estado });
-      }
-      
-      // Actualizar usuario si existe
-      if (celular.usuario) {
-        await api.put(`${API_URL}/celulares/${numeroSerie}/usuario`, celular.usuario);
-      }
-      
-      // Retornar el celular actualizado (simulado)
-      return { data: celular };
-    } catch (error) {
-      console.error('Error al actualizar celular:', error);
-      throw error;
-    }
+  actualizar(numeroSerie: number, celular: any) {
+    console.log('Actualizando celular completo:', { numeroSerie, celular });
+    return api.put(`${API_URL}/celulares/${numeroSerie}`, celular);
   },
 
   // Cambiar estado

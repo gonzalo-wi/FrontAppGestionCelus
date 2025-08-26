@@ -17,6 +17,21 @@
     </div>
 
     <form @submit.prevent="guardar" class="space-y-4">
+      <!-- Código Interno (siempre visible) -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Código Interno *
+        </label>
+        <input 
+          v-model="form.codigoInterno"
+          type="text" 
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Ej: SAM001"
+        />
+        <p class="text-xs text-gray-500 mt-1">Código interno único para el inventario</p>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Marca</label>
@@ -77,6 +92,7 @@ const props = defineProps({
 const emit = defineEmits(['save', 'cancel']);
 
 const form = reactive({
+  codigoInterno: '',
   marca: '',
   modelo: '',
   estado: 'NUEVO'
@@ -85,6 +101,7 @@ const form = reactive({
 const isEditing = computed(() => !!props.celular);
 
 const resetForm = () => {
+  form.codigoInterno = '';
   form.marca = '';
   form.modelo = '';
   form.estado = 'NUEVO';
@@ -97,24 +114,25 @@ const cancelEdit = () => {
 
 const guardar = () => {
   const celular = {
+    codigoInterno: form.codigoInterno,
     marca: form.marca,
     modelo: form.modelo,
     estado: form.estado
   };
   
-  if (isEditing.value) {
-    celular.numeroSerie = props.celular.numeroSerie;
-  }
-  
+  console.log('💾 Guardando celular:', celular, 'Modo edición:', isEditing.value);
   emit('save', celular);
 };
 
 // Watch para cargar datos cuando se edita
 watch(() => props.celular, (newCelular) => {
+  console.log('🔧 Cargando celular para editar:', newCelular);
   if (newCelular) {
+    form.codigoInterno = newCelular.codigoInterno || newCelular.numeroSerie || '';
     form.marca = newCelular.marca;
     form.modelo = newCelular.modelo;
     form.estado = newCelular.estado;
+    console.log('📝 Formulario actualizado:', form);
   } else {
     resetForm();
   }

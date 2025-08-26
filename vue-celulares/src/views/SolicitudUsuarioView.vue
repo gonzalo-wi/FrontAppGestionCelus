@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8">
       <!-- Header con gradiente -->
       <div class="relative mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-2xl p-8 text-white shadow-2xl">
         <div class="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
@@ -122,7 +122,8 @@
                     required>
               <option value="">Seleccionar tipo</option>
               <option value="CAMBIO_POR_ROTURA">CAMBIO POR ROTURA</option>
-              <option value="NUEVO_EQUIPO">EQUIPO NUEVO</option>
+              <option value="NUEVO_EQUIPO">NUEVO EQUIPO</option>
+              <option value="ROBO">ROBO</option>
             </select>
           </div>
           <div class="md:col-span-2 space-y-2">
@@ -209,14 +210,20 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900">Mis Solicitudes</h2>
+              <h2 class="text-2xl font-bold text-gray-900">Solicitudes de Mi Región</h2>
               <p class="text-gray-600">Historial de todas tus solicitudes</p>
             </div>
           </div>
           <button @click="cargarMisSolicitudes" 
-                  class="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-2xl text-sm font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                  :class="[
+                    'px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200',
+                    'hover:from-gray-200 hover:to-gray-300 rounded-2xl text-sm font-semibold',
+                    'flex items-center gap-2 transform hover:scale-105',
+                    'transition-all duration-200 shadow-lg'
+                  ]">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             Actualizar
           </button>
@@ -239,8 +246,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">No tienes solicitudes aún</h3>
-          <p class="text-gray-500 mb-6">Crea tu primera solicitud usando el formulario de arriba</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No hay solicitudes en tu región aún</h3>
+          <p class="text-gray-500 mb-6">Crea la primera solicitud usando el formulario de arriba</p>
           <div class="inline-flex items-center gap-2 text-blue-600 font-medium">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -250,7 +257,7 @@
         </div>
 
         <div v-else class="space-y-6">
-          <div v-for="solicitud in misSolicitudes" :key="solicitud.id" 
+          <div v-for="solicitud in solicitudesPaginadas" :key="solicitud.id" 
                class="bg-white/60 backdrop-blur-sm border-2 border-white/50 rounded-2xl p-6 hover:shadow-xl hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-1">
             <div class="flex justify-between items-start mb-4">
               <div class="flex items-center gap-4">
@@ -261,12 +268,20 @@
                 </div>
                 <div>
                   <h3 class="text-xl font-bold text-gray-900">Solicitud #{{ solicitud.id }}</h3>
-                  <p class="text-gray-600 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-4 0v4m-4 0h8m0 0V3m0 4h.01"></path>
-                    </svg>
-                    {{ solicitud.fecha }}
-                  </p>
+                  <div class="flex items-center gap-4 text-gray-600">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                      </svg>
+                      {{ solicitud.nomSolicitante }}
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-4 0v4m-4 0h8m0 0V3m0 4h.01"></path>
+                      </svg>
+                      {{ solicitud.fecha }}
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="flex items-center gap-3">
@@ -281,7 +296,12 @@
                 <!-- Botón PDF mejorado -->
                 <button 
                   @click="descargarPDF(solicitud)"
-                  class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                  :class="[
+                    'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600',
+                    'text-white px-4 py-2 rounded-full text-sm font-semibold',
+                    'flex items-center gap-2 transform hover:scale-105',
+                    'transition-all duration-200 shadow-lg'
+                  ]"
                   title="Descargar PDF"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,6 +362,18 @@
               <p class="text-gray-900 leading-relaxed">{{ solicitud.motivo }}</p>
             </div>
           </div>
+          
+          <!-- Paginación para Mis Solicitudes -->
+          <div v-if="misSolicitudes.length > itemsPerPageSolicitudes" class="mt-8">
+            <Pagination
+              :current-page="currentPageSolicitudes"
+              :total-pages="totalPagesSolicitudes"
+              :items-per-page="itemsPerPageSolicitudes"
+              :total-items="misSolicitudes.length"
+              @page-changed="onPageChangedSolicitudes"
+              @items-per-page-changed="onItemsPerPageChangedSolicitudes"
+            />
+          </div>
         </div>
       </div>
     
@@ -360,9 +392,15 @@
             </div>
           </div>
           <button @click="cargarMiFlota" 
-                  class="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-2xl text-sm font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                  :class="[
+                    'px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200',
+                    'hover:from-gray-200 hover:to-gray-300 rounded-2xl text-sm font-semibold',
+                    'flex items-center gap-2 transform hover:scale-105',
+                    'transition-all duration-200 shadow-lg'
+                  ]">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             Actualizar
           </button>
@@ -453,7 +491,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200/50">
-                <tr v-for="u in miFlota" :key="u.numReparto" 
+                <tr v-for="u in flotaPaginada" :key="u.numReparto" 
                     class="hover:bg-blue-50/50 transition-colors duration-200 group">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center gap-3">
@@ -472,13 +510,46 @@
                     <span class="text-sm text-gray-700 font-medium">{{ u.zona }}</span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span v-if="u.numeroLinea" class="inline-flex items-center gap-1 text-sm text-gray-900 font-medium">
-                      <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      {{ u.numeroLinea }}
-                    </span>
-                    <span v-else class="text-gray-400 italic text-sm">Sin línea</span>
+                    <div v-if="!editandoLinea[u.numReparto]" class="flex items-center gap-2">
+                      <span v-if="u.numeroLinea" class="inline-flex items-center gap-1 text-sm text-gray-900 font-medium">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        {{ u.numeroLinea }}
+                      </span>
+                      <span v-else class="text-gray-400 italic text-sm">Sin línea</span>
+                      <button @click="iniciarEdicionLinea(u)" 
+                              class="ml-2 p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                              title="Editar línea">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div v-else class="flex items-center gap-2">
+                      <input 
+                        v-model="numeroLineaTemporal[u.numReparto]"
+                        type="text" 
+                        class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Línea"
+                        @keyup.enter="guardarLinea(u)"
+                        @keyup.escape="cancelarEdicionLinea(u)"
+                      />
+                      <button @click="guardarLinea(u)" 
+                              class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                              title="Guardar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </button>
+                      <button @click="cancelarEdicionLinea(u)" 
+                              class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                              title="Cancelar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                   <td class="px-6 py-4">
                     <div v-if="u.celular" class="flex items-center gap-2">
@@ -505,6 +576,18 @@
               </tbody>
             </table>
           </div>
+          
+          <!-- Paginación para Mi Flota -->
+          <div v-if="miFlota.length > itemsPerPageFlota" class="mt-6 px-6 pb-6">
+            <Pagination
+              :current-page="currentPageFlota"
+              :total-pages="totalPagesFlota"
+              :items-per-page="itemsPerPageFlota"
+              :total-items="miFlota.length"
+              @page-changed="onPageChangedFlota"
+              @items-per-page-changed="onItemsPerPageChangedFlota"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -517,7 +600,8 @@ import { solicitudService, EstadoSolicitud } from '@/services/solicitudService';
 import { authService } from '@/services/authService';
 import { excelService } from '@/services/excelService';
 import { pdfService } from '@/services/pdfService';
-import { obtenerMiFlota, obtenerMisSolicitudes } from '@/services/usuarioService';
+import { obtenerMiFlota, obtenerMisSolicitudes, obtenerSolicitudesMiRegion, crearMiSolicitud, actualizarLineaFlota } from '@/services/usuarioService';
+import Pagination from '@/components/Pagination.vue';
 
 // Funciones helper para formatear enums
 const formatearTipoSolicitud = (tipo) => {
@@ -565,6 +649,18 @@ const miFlota = ref([]);
 const flotaCargada = ref(false);
 const notification = reactive({ show: false, type: 'success', message: '' });
 
+// Paginación para Mis Solicitudes
+const currentPageSolicitudes = ref(1);
+const itemsPerPageSolicitudes = ref(5);
+
+// Paginación para Mi Flota
+const currentPageFlota = ref(1);
+const itemsPerPageFlota = ref(10);
+
+// Estado para edición de líneas
+const editandoLinea = ref({});
+const numeroLineaTemporal = ref({});
+
 // Formulario - inicialización condicional según rol
 const initializeForm = () => {
   const baseForm = {
@@ -597,6 +693,28 @@ const tiposMotivo = [
   'OTRO'
 ];
 
+// Computed para paginación de Mis Solicitudes
+const totalPagesSolicitudes = computed(() => {
+  return Math.ceil(misSolicitudes.value.length / itemsPerPageSolicitudes.value);
+});
+
+const solicitudesPaginadas = computed(() => {
+  const inicio = (currentPageSolicitudes.value - 1) * itemsPerPageSolicitudes.value;
+  const fin = inicio + itemsPerPageSolicitudes.value;
+  return misSolicitudes.value.slice(inicio, fin);
+});
+
+// Computed para paginación de Mi Flota
+const totalPagesFlota = computed(() => {
+  return Math.ceil(miFlota.value.length / itemsPerPageFlota.value);
+});
+
+const flotaPaginada = computed(() => {
+  const inicio = (currentPageFlota.value - 1) * itemsPerPageFlota.value;
+  const fin = inicio + itemsPerPageFlota.value;
+  return miFlota.value.slice(inicio, fin);
+});
+
 // Usuario actual (esto vendría de tu sistema de autenticación)
 const usuarioActual = ref(''); // Se debe setear con el usuario logueado
 
@@ -608,6 +726,72 @@ const mostrarNotificacion = (mensaje, tipo = 'success') => {
   setTimeout(() => {
     notification.show = false;
   }, 4000);
+};
+
+// Métodos de paginación para Mis Solicitudes
+const onPageChangedSolicitudes = (newPage) => {
+  currentPageSolicitudes.value = newPage;
+};
+
+const onItemsPerPageChangedSolicitudes = (newItemsPerPage) => {
+  itemsPerPageSolicitudes.value = newItemsPerPage;
+  currentPageSolicitudes.value = 1; // Reset a la primera página
+};
+
+// Métodos de paginación para Mi Flota
+const onPageChangedFlota = (newPage) => {
+  currentPageFlota.value = newPage;
+};
+
+const onItemsPerPageChangedFlota = (newItemsPerPage) => {
+  itemsPerPageFlota.value = newItemsPerPage;
+  currentPageFlota.value = 1; // Reset a la primera página
+};
+
+// Métodos para editar líneas
+const iniciarEdicionLinea = (usuario) => {
+  editandoLinea.value[usuario.numReparto] = true;
+  numeroLineaTemporal.value[usuario.numReparto] = usuario.numeroLinea || '';
+};
+
+const cancelarEdicionLinea = (usuario) => {
+  editandoLinea.value[usuario.numReparto] = false;
+  delete numeroLineaTemporal.value[usuario.numReparto];
+};
+
+const guardarLinea = async (usuario) => {
+  try {
+    const nuevoNumeroLinea = numeroLineaTemporal.value[usuario.numReparto];
+
+    // Log de depuración
+    console.log('🔄 Actualizando línea', {
+      numReparto: usuario.numReparto,
+      numeroAnterior: usuario.numeroLinea,
+      nuevoNumeroLinea
+    });
+
+    // Llamada al backend
+    await actualizarLineaFlota(usuario.numReparto, nuevoNumeroLinea || null);
+
+    // Refrescar estado local
+    const idx = miFlota.value.findIndex(u => u.numReparto === usuario.numReparto);
+    if (idx !== -1) miFlota.value[idx].numeroLinea = nuevoNumeroLinea || null;
+
+    // Salir de modo edición
+    editandoLinea.value[usuario.numReparto] = false;
+    delete numeroLineaTemporal.value[usuario.numReparto];
+
+    mostrarNotificacion('Número de línea actualizado correctamente');
+  } catch (error) {
+    console.error('Error al actualizar línea:', error);
+    if (error.response?.status === 403) {
+      mostrarNotificacion('No tienes permisos para actualizar líneas en esta región', 'error');
+    } else if (error.response?.status === 404) {
+      mostrarNotificacion('Usuario no encontrado en tu flota', 'error');
+    } else {
+      mostrarNotificacion('Error al actualizar el número de línea', 'error');
+    }
+  }
 };
 
 // Crear solicitud
@@ -638,7 +822,7 @@ const crearSolicitud = async () => {
     }
     
     console.log('Creando solicitud:', payload);
-    await solicitudService.crear(payload);
+    await crearMiSolicitud(payload);
     
     mostrarNotificacion('¡Solicitud creada exitosamente! Recibirás una respuesta pronto.');
     
@@ -677,12 +861,55 @@ const cargarMisSolicitudes = async () => {
   try {
     loadingSolicitudes.value = true;
     
-    console.log('Cargando mis solicitudes...');
+    console.log('Cargando solicitudes de mi región...');
     console.log('Auth header:', authService.getAuthHeader());
+    console.log('DEBUG: Iniciando función cargarMisSolicitudes');
     
-    // Usar el nuevo endpoint específico para el usuario autenticado
-    const response = await obtenerMisSolicitudes();
-    misSolicitudes.value = response.data || [];
+    // Obtener todas las solicitudes y filtrar por región del usuario
+    const response = await solicitudService.obtenerTodas();
+    const todasLasSolicitudes = response.data || [];
+    
+    // Obtener la región del usuario desde múltiples fuentes
+    let userRegion = null;
+    
+    // Método 1: Desde la flota si ya está cargada
+    if (miFlota.value && miFlota.value.length > 0) {
+      userRegion = miFlota.value[0].region;
+    }
+    
+    // Método 2: Desde el token de autenticación (decodificar Basic auth)
+    if (!userRegion) {
+      const authHeader = authService.getAuthHeader();
+      if (authHeader?.startsWith('Basic ')) {
+        const base64 = authHeader.substring(6);
+        const decoded = atob(base64);
+        const username = decoded.split(':')[0];
+        // Mapear username a región
+        const regionMap = {
+          'norte': 'NORTE',
+          'este': 'ESTE', 
+          'sur': 'SUR',
+          'oeste': 'OESTE',
+          'laplata': 'LA_PLATA',
+          'nafa': 'NAFA'
+        };
+        userRegion = regionMap[username.toLowerCase()];
+      }
+    }
+    
+    // Filtrar solicitudes por región si tenemos la región
+    if (userRegion) {
+      misSolicitudes.value = todasLasSolicitudes.filter(solicitud => 
+        solicitud.region === userRegion
+      );
+    } else {
+      // Si no podemos determinar la región, mostrar todas las solicitudes
+      misSolicitudes.value = todasLasSolicitudes;
+    }
+    
+    console.log('Región del usuario:', userRegion);
+    console.log('Total solicitudes:', todasLasSolicitudes.length);
+    console.log('Solicitudes filtradas por región:', misSolicitudes.value.length);
     
     // Ordenar por fecha de creación descendente (más recientes primero)
     misSolicitudes.value.sort((a, b) => {
@@ -697,7 +924,7 @@ const cargarMisSolicitudes = async () => {
       return 0;
     });
     
-    console.log('Mis solicitudes ordenadas:', misSolicitudes.value);
+    console.log('Solicitudes de mi región ordenadas:', misSolicitudes.value);
     
   } catch (error) {
     console.error('Error al cargar solicitudes:', error);

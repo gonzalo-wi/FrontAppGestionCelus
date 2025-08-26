@@ -5,6 +5,7 @@ import UsuariosView from '@/views/UsuariosView.vue';
 import SolicitudesView from '@/views/SolicitudesView.vue';
 import SolicitudUsuarioView from '@/views/SolicitudUsuarioView.vue';
 import EstadisticasView from '@/views/EstadisticasView.vue';
+import AdminUsuariosView from '@/views/AdminUsuariosView.vue';
 import LoginView from '@/views/LoginView.vue';
 import { authService } from '@/services/authService';
 
@@ -49,6 +50,12 @@ const routes = [
     path: '/estadisticas', 
     name: 'Estadisticas', 
     component: EstadisticasView,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  { 
+    path: '/admin/usuarios', 
+    name: 'AdminUsuarios', 
+    component: AdminUsuariosView,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
 ];

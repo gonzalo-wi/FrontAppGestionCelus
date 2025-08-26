@@ -33,234 +33,284 @@ const formatearEstado = (estado: string): string => {
 
 export const generarPDFSolicitud = async (solicitud: Solicitud) => {
   try {
-    // Crear nueva instancia de jsPDF
-    const doc = new jsPDF();
+    // Crear nueva instancia de jsPDF con configuración optimizada
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
     
     // Configuración de colores y fuentes mejorados
-    const colorPrimario: [number, number, number] = [30, 58, 138]; // Indigo-800 (más elegante)
-    const colorSecundario: [number, number, number] = [55, 65, 81]; // Gray-700
-    const colorTexto: [number, number, number] = [17, 24, 39]; // Gray-900
-    const colorFondo: [number, number, number] = [249, 250, 251]; // Gray-50
-    const colorBorde: [number, number, number] = [209, 213, 219]; // Gray-300
+    const colorPrimario: [number, number, number] = [30, 58, 138];
+    const colorSecundario: [number, number, number] = [55, 65, 81];
+    const colorTexto: [number, number, number] = [17, 24, 39];
+    const colorFondo: [number, number, number] = [249, 250, 251];
+    const colorBorde: [number, number, number] = [209, 213, 219];
     
-    // Configurar fuente
+    // Configuración de página y márgenes
+    const pageHeight = 297; // A4 height in mm
+    const pageWidth = 210; // A4 width in mm
+    const margin = 15;
+    const contentWidth = pageWidth - (margin * 2);
+    const footerHeight = 20;
+    const maxContentHeight = pageHeight - footerHeight - 10;
+    
+    // Función para verificar si necesitamos nueva página
+    const checkPageBreak = (currentY: number, requiredHeight: number): number => {
+      if (currentY + requiredHeight > maxContentHeight) {
+        doc.addPage();
+        addHeader();
+        return 45; // Reset Y position after header
+      }
+      return currentY;
+    };
+    
+    // Función para agregar header consistente
+    const addHeader = () => {
+      // Fondo del header con gradiente simulado
+      doc.setFillColor(...colorPrimario);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+      
+      // Línea decorativa inferior
+      doc.setFillColor(79, 70, 229);
+      doc.rect(0, 28, pageWidth, 2, 'F');
+      
+      // Título principal
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SOLICITUD DE CELULAR', margin, 18);
+      
+      // Información de la empresa
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Sistema de Gestión de Celulares', 120, 14);
+      doc.text('Departamento de Sistemas', 120, 22);
+    };
+    
+    // Configurar fuente por defecto
     doc.setFont('helvetica');
     
-    // === HEADER MEJORADO ===
-    // Fondo del header con gradiente simulado
-    doc.setFillColor(...colorPrimario);
-    doc.rect(0, 0, 210, 35, 'F');
-    
-    // Línea decorativa inferior
-    doc.setFillColor(79, 70, 229); // Indigo-600
-    doc.rect(0, 32, 210, 3, 'F');
-    
-    // Título principal
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SOLICITUD DE CELULAR', 20, 22);
-    
-    // Información de la empresa mejorada
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Sistema de Gestión de Celulares', 130, 18);
-    doc.text('Departamento de Sistemas', 130, 26);
+    // Agregar header inicial
+    addHeader();
     
     // === INFORMACIÓN PRINCIPAL ===
     doc.setTextColor(...colorTexto);
-    let yPos = 55;
+    let yPos = 40;
     
-    // ID y Estado en una caja destacada
+    // ID y Estado en una caja destacada (más compacta)
+    yPos = checkPageBreak(yPos, 18);
     doc.setFillColor(...colorFondo);
-    doc.rect(15, yPos - 8, 180, 20, 'F');
+    doc.rect(margin, yPos - 5, contentWidth, 16, 'F');
     doc.setDrawColor(...colorBorde);
-    doc.rect(15, yPos - 8, 180, 20);
+    doc.rect(margin, yPos - 5, contentWidth, 16);
     
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('SOLICITUD #' + solicitud.id, 20, yPos);
+    doc.text('SOLICITUD #' + solicitud.id, margin + 5, yPos + 3);
     
-    // Estado con color y marco
+    // Estado con color y marco (más compacto)
     const estadoColor = getEstadoColor(solicitud.estado || 'PENDIENTE');
     const estadoTexto = formatearEstado(solicitud.estado || 'PENDIENTE');
     
-    // Marco para el estado
     doc.setFillColor(...estadoColor);
-    doc.roundedRect(130, yPos - 6, 35, 12, 2, 2, 'F');
+    doc.roundedRect(140, yPos - 3, 30, 10, 1, 1, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(estadoTexto, 133, yPos + 1);
+    doc.setFontSize(9);
+    doc.text(estadoTexto, 142, yPos + 2);
     
     doc.setTextColor(...colorTexto);
     yPos += 25;
     
     // === DATOS DEL SOLICITANTE ===
-    // Sección con fondo
-    doc.setFillColor(239, 246, 255); // Blue-50
-    doc.rect(15, yPos - 5, 180, 60, 'F');
-    doc.setDrawColor(191, 219, 254); // Blue-200
-    doc.rect(15, yPos - 5, 180, 60);
+    yPos = checkPageBreak(yPos, 45);
+    doc.setFillColor(239, 246, 255);
+    doc.rect(margin, yPos - 3, contentWidth, 40, 'F');
+    doc.setDrawColor(191, 219, 254);
+    doc.rect(margin, yPos - 3, contentWidth, 40);
     
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 64, 175); // Blue-800
-    doc.text('DATOS DEL SOLICITANTE', 20, yPos + 5);
+    doc.setTextColor(30, 64, 175);
+    doc.text('DATOS DEL SOLICITANTE', margin + 5, yPos + 5);
     
     doc.setTextColor(...colorTexto);
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    yPos += 18;
+    yPos += 12;
     
-    // Datos en dos columnas
+    // Datos en formato más compacto
     doc.setFont('helvetica', 'bold');
-    doc.text('Nombre completo:', 25, yPos);
+    doc.text('Nombre:', margin + 5, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.nomSolicitante || 'N/A', 65, yPos);
-    
-    doc.setFont('helvetica', 'bold');
-    doc.text('Fecha:', 120, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.fecha || 'N/A', 135, yPos);
-    yPos += 10;
+    doc.text(solicitud.nomSolicitante || 'N/A', margin + 30, yPos);
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Número de reparto:', 25, yPos);
+    doc.text('Fecha:', 110, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.usuario || 'N/A', 65, yPos);
+    doc.text(solicitud.fecha || 'N/A', 125, yPos);
+    yPos += 8;
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Región:', 120, yPos);
+    doc.text('Nº Reparto:', margin + 5, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(formatearRegion(solicitud.region || ''), 135, yPos);
+    doc.text(solicitud.usuario || 'N/A', margin + 30, yPos);
     
-    yPos += 25;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Región:', 110, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatearRegion(solicitud.region || ''), 125, yPos);
+    
+    yPos += 20;
     
     // === DETALLES DE LA SOLICITUD ===
-    doc.setFillColor(240, 253, 244); // Green-50
-    doc.rect(15, yPos - 5, 180, 45, 'F');
-    doc.setDrawColor(187, 247, 208); // Green-200
-    doc.rect(15, yPos - 5, 180, 45);
+    yPos = checkPageBreak(yPos, 35);
+    doc.setFillColor(240, 253, 244);
+    doc.rect(margin, yPos - 3, contentWidth, 30, 'F');
+    doc.setDrawColor(187, 247, 208);
+    doc.rect(margin, yPos - 3, contentWidth, 30);
     
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(21, 128, 61); // Green-700
-    doc.text('DETALLES DE LA SOLICITUD', 20, yPos + 5);
+    doc.setTextColor(21, 128, 61);
+    doc.text('DETALLES DE LA SOLICITUD', margin + 5, yPos + 5);
     
     doc.setTextColor(...colorTexto);
-    doc.setFontSize(11);
-    yPos += 18;
+    doc.setFontSize(10);
+    yPos += 12;
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Tipo de solicitud:', 25, yPos);
+    doc.text('Tipo:', margin + 5, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(formatearTipoSolicitud(solicitud.tipoSolicitud || ''), 70, yPos);
+    doc.text(formatearTipoSolicitud(solicitud.tipoSolicitud || ''), margin + 25, yPos);
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Necesita línea:', 120, yPos);
+    doc.text('Necesita línea:', 110, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(solicitud.necesitaLinea ? 'Sí' : 'No', 160, yPos);
+    doc.text(solicitud.necesitaLinea ? 'Sí' : 'No', 145, yPos);
     
-    yPos += 25;
+    yPos += 20;
     
     // === MOTIVO ===
-    doc.setFillColor(255, 251, 235); // Amber-50
-    doc.rect(15, yPos - 5, 180, 35, 'F');
-    doc.setDrawColor(253, 230, 138); // Amber-200
-    doc.rect(15, yPos - 5, 180, 35);
+    const motivo = solicitud.motivo || 'Sin descripción proporcionada';
+    const motivoLineas = doc.splitTextToSize(motivo, contentWidth - 20);
+    const motivoHeight = Math.max(25, (motivoLineas.length * 5) + 15);
+    
+    yPos = checkPageBreak(yPos, motivoHeight);
+    doc.setFillColor(255, 251, 235);
+    doc.rect(margin, yPos - 3, contentWidth, motivoHeight, 'F');
+    doc.setDrawColor(253, 230, 138);
+    doc.rect(margin, yPos - 3, contentWidth, motivoHeight);
     
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(180, 83, 9); // Amber-700
-    doc.text('DESCRIPCIÓN / MOTIVO:', 20, yPos + 5);
+    doc.setTextColor(180, 83, 9);
+    doc.text('DESCRIPCIÓN / MOTIVO:', margin + 5, yPos + 5);
     
     doc.setTextColor(...colorTexto);
     doc.setFont('helvetica', 'normal');
-    const motivo = solicitud.motivo || 'Sin descripción proporcionada';
-    const motivoLineas = doc.splitTextToSize(motivo, 160);
-    doc.text(motivoLineas, 25, yPos + 15);
+    doc.text(motivoLineas, margin + 5, yPos + 12);
     
-    yPos += 40; // Reducido de 50 a 40
+    yPos += motivoHeight + 5;
     
     // === SECCIÓN PARA USO DE SISTEMAS ===
     // Línea separadora elegante
+    yPos = checkPageBreak(yPos, 60);
     doc.setDrawColor(...colorPrimario);
-    doc.setLineWidth(1.5);
-    doc.line(15, yPos, 195, yPos);
-    yPos += 8; // Reducido de 10 a 8
+    doc.setLineWidth(1);
+    doc.line(margin, yPos, margin + contentWidth, yPos);
+    yPos += 5;
     
-    doc.setFillColor(254, 242, 242); // Red-50
-    doc.rect(15, yPos - 3, 180, 70, 'F'); // Reducido altura de 85 a 70
-    doc.setDrawColor(254, 202, 202); // Red-200
-    doc.rect(15, yPos - 3, 180, 70);
+    doc.setFillColor(254, 242, 242);
+    doc.rect(margin, yPos - 3, contentWidth, 55, 'F');
+    doc.setDrawColor(254, 202, 202);
+    doc.rect(margin, yPos - 3, contentWidth, 55);
     
-    doc.setFontSize(13); // Reducido de 14 a 13
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(185, 28, 28); // Red-700
-    doc.text('PARA USO EXCLUSIVO DEL DEPARTAMENTO DE SISTEMAS', 20, yPos + 6);
+    doc.setTextColor(185, 28, 28);
+    doc.text('PARA USO EXCLUSIVO DEL DEPARTAMENTO DE SISTEMAS', margin + 5, yPos + 5);
     
     doc.setTextColor(...colorTexto);
-    doc.setFontSize(10); // Reducido de 11 a 10
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    yPos += 16; // Reducido de 20 a 16
+    yPos += 12;
     
-    // Campos mejorados con líneas más elegantes (más compactos)
-    doc.text('Reparto responsable:', 25, yPos);
+    // Campos en formato más compacto y organizado
+    doc.text('Reparto responsable:', margin + 5, yPos);
     doc.setDrawColor(...colorSecundario);
-    doc.line(70, yPos + 2, 180, yPos + 2);
-    yPos += 10; // Reducido de 12 a 10
+    doc.line(margin + 45, yPos + 1, margin + contentWidth - 5, yPos + 1);
+    yPos += 9;
     
-    doc.text('Celular entregado (Marca/Modelo):', 25, yPos);
-    doc.line(90, yPos + 2, 180, yPos + 2);
-    yPos += 10;
+    doc.text('Celular entregado (Marca/Modelo):', margin + 5, yPos);
+    doc.line(margin + 70, yPos + 1, margin + contentWidth - 5, yPos + 1);
+    yPos += 9;
     
-    doc.text('Número de serie:', 25, yPos);
-    doc.line(70, yPos + 2, 180, yPos + 2);
-    yPos += 10;
+    doc.text('Número de serie:', margin + 5, yPos);
+    doc.line(margin + 35, yPos + 1, 120, yPos + 1);
     
-    doc.text('Fecha de entrega:', 25, yPos);
-    doc.line(70, yPos + 2, 140, yPos + 2);
+    doc.text('Fecha entrega:', 125, yPos);
+    doc.line(150, yPos + 1, margin + contentWidth - 5, yPos + 1);
+    yPos += 9;
     
-    doc.text('Estado del equipo:', 145, yPos);
-    doc.line(185, yPos + 2, 195, yPos + 2);
-    yPos += 15; 
+    doc.text('Estado del equipo:', margin + 5, yPos);
+    doc.line(margin + 40, yPos + 1, 120, yPos + 1);
+    
+    doc.text('Observaciones:', 125, yPos);
+    doc.line(155, yPos + 1, margin + contentWidth - 5, yPos + 1);
+    
+    yPos += 18;
     
     // === FIRMAS ===
-    doc.setFillColor(248, 250, 252); // Slate-50
-    doc.rect(15, yPos - 3, 180, 20, 'F'); // Reducido altura de 25 a 20
-    doc.setDrawColor(203, 213, 225); // Slate-300
-    doc.rect(15, yPos - 3, 180, 20);
+    yPos = checkPageBreak(yPos, 25);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(margin, yPos - 3, contentWidth, 20, 'F');
+    doc.setDrawColor(203, 213, 225);
+    doc.rect(margin, yPos - 3, contentWidth, 20);
     
     doc.setFont('helvetica', 'bold');
-    doc.text('FIRMAS Y AUTORIZACIONES:', 20, yPos + 3);
-    yPos += 10; // Reducido de 12 a 10
+    doc.setFontSize(10);
+    doc.text('FIRMAS Y AUTORIZACIONES:', margin + 5, yPos + 3);
+    yPos += 10;
     
     doc.setFont('helvetica', 'normal');
-    // Dos columnas para firmas
-    doc.text('Firma de supervisor:', 25, yPos);
-    doc.line(70, yPos + 2, 100, yPos + 2);
+    doc.setFontSize(9);
+    // Firmas en dos columnas
+    doc.text('Firma supervisor:', margin + 5, yPos);
+    doc.line(margin + 30, yPos + 1, margin + 80, yPos + 1);
     
-    doc.text('Firma del solicitante:', 110, yPos);
-    doc.line(155, yPos + 2, 185, yPos + 2);
+    doc.text('Firma solicitante:', margin + 90, yPos);
+    doc.line(margin + 120, yPos + 1, margin + contentWidth - 5, yPos + 1);
     
-    yPos += 12; // Reducido de 15 a 12
+    yPos += 15;
     
-    // === FOOTER MEJORADO ===
-    doc.setFillColor(...colorPrimario);
-    doc.rect(0, yPos, 210, 12, 'F'); // Reducido altura de 15 a 12
+    // === FOOTER DINÁMICO ===
+    const addFooter = (currentPage: number, totalPages: number) => {
+      const footerY = pageHeight - 15;
+      
+      doc.setFillColor(...colorPrimario);
+      doc.rect(0, footerY, pageWidth, 15, 'F');
+      
+      const fechaGeneracion = new Date().toLocaleDateString('es-AR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      doc.setFontSize(7);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`Generado: ${fechaGeneracion}`, margin, footerY + 8);
+      doc.text('Sistema de Gestión de Celulares v2.0', 100, footerY + 8);
+      doc.text(`Pág. ${currentPage}/${totalPages}`, pageWidth - 30, footerY + 8);
+    };
     
-    const fechaGeneracion = new Date().toLocaleDateString('es-AR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    doc.setFontSize(7); // Reducido de 8 a 7
-    doc.setTextColor(255, 255, 255);
-    doc.text(`Documento generado el ${fechaGeneracion}`, 20, yPos + 7); // Ajustado posición
-    doc.text('Sistema de Gestión de Celulares v2.0', 130, yPos + 7);
+    // Calcular páginas totales y agregar footers
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      addFooter(i, totalPages);
+    }
     
     // Descargar el PDF con nombre mejorado
     const nombreArchivo = `Solicitud_${solicitud.id}_${solicitud.nomSolicitante?.replace(/\s+/g, '_') || 'Usuario'}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -287,17 +337,29 @@ const getEstadoColor = (estado: string): [number, number, number] => {
 };
 
 // Función para preview del PDF (opcional)
-export const previsualizarPDF = async (_solicitud: Solicitud) => {
+export const previsualizarPDF = async (solicitud: Solicitud) => {
   try {
-    const doc = new jsPDF();
-    // ... mismo código que generarPDFSolicitud pero sin save()
+    // Reutilizar la misma lógica pero sin guardar el archivo
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Usar el mismo código de generación que arriba
+    // (Por simplicidad, se podría refactorizar en una función común)
     
     // Abrir en nueva ventana para preview
     const pdfData = doc.output('datauristring');
     const newWindow = window.open();
     if (newWindow) {
       newWindow.document.write(`
-        <iframe width="100%" height="100%" src="${pdfData}"></iframe>
+        <html>
+          <head><title>Preview - Solicitud ${solicitud.id}</title></head>
+          <body style="margin:0;">
+            <iframe width="100%" height="100%" src="${pdfData}"></iframe>
+          </body>
+        </html>
       `);
     }
     

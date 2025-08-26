@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50 p-6">
-    <div class="max-w-7xl mx-auto space-y-8">
+    <div class="w-full space-y-8">
       <!-- Header con gradiente mejorado -->
       <div class="relative bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-3xl p-8 text-white shadow-2xl overflow-hidden">
         <div class="absolute inset-0 bg-black opacity-10"></div>
@@ -252,21 +252,18 @@
             </div>
             
             <div class="space-y-4">
-              <div v-for="([usuario, cantidad], index) in topCelularesRotos" :key="usuario" 
+              <div v-for="([usuario, cantidad], index) in topCelularesRotosPaginados" :key="usuario" 
                    class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/50 transform hover:scale-105 transition-all duration-200">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-4">
                     <div class="relative">
                       <div :class="[
                         'w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg',
-                        index === 0 ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
-                        index === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
-                        index === 2 ? 'bg-gradient-to-r from-orange-400 to-red-500' :
                         'bg-gradient-to-r from-blue-400 to-blue-600'
                       ]">
-                        {{ index + 1 }}
+                        {{ (currentPageFlota - 1) * itemsPerPageFlota + index + 1 }}
                       </div>
-                      <div v-if="index < 3" class="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                      <div v-if="((currentPageFlota - 1) * itemsPerPageFlota + index) < 3" class="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
                         <svg class="w-3 h-3 text-yellow-800" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                         </svg>
@@ -291,6 +288,18 @@
                 </div>
               </div>
             </div>
+
+            <!-- Paginación para Mi Flota -->
+            <div v-if="topCelularesRotos.length > itemsPerPageFlota" class="mt-6">
+              <Pagination
+                :current-page="currentPageFlota"
+                :total-pages="totalPagesFlota"
+                :items-per-page="itemsPerPageFlota"
+                :total-items="topCelularesRotos.length"
+                @page-changed="onPageChangedFlota"
+                @items-per-page-changed="onItemsPerPageChangedFlota"
+              />
+            </div>
             
             <div v-if="Object.keys(estadisticas.celularesRotosPorUsuario || {}).length === 0" class="text-center py-12">
               <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full mb-4">
@@ -311,6 +320,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { obtenerEstadisticasMiRegion } from '@/services/usuarioService';
+import Pagination from './Pagination.vue';
 
 // Estado
 const loading = ref(false);
@@ -327,12 +337,26 @@ const estadisticas = ref({
   solicitudesPorMes: {}
 });
 
+// Paginación para "Mi Flota" (Top Usuarios con Celulares Rotos)
+const currentPageFlota = ref(1);
+const itemsPerPageFlota = ref(5);
+
 // Computed
 const topCelularesRotos = computed(() => {
   const data = estadisticas.value.celularesRotosPorUsuario || {};
   return Object.entries(data)
-    .sort(([,a], [,b]) => b - a)
-    .slice(0, 5); // Top 5
+    .sort(([,a], [,b]) => b - a); // Todos los datos, sin slice para la paginación
+});
+
+// Computed para paginación de Mi Flota
+const totalPagesFlota = computed(() => {
+  return Math.ceil(topCelularesRotos.value.length / itemsPerPageFlota.value);
+});
+
+const topCelularesRotosPaginados = computed(() => {
+  const inicio = (currentPageFlota.value - 1) * itemsPerPageFlota.value;
+  const fin = inicio + itemsPerPageFlota.value;
+  return topCelularesRotos.value.slice(inicio, fin);
 });
 
 // Métodos
@@ -398,6 +422,16 @@ const getEstadoColor = (estado) => {
     case 'RECHAZADA': return 'bg-red-500';
     default: return 'bg-gray-500';
   }
+};
+
+// Métodos de paginación para Mi Flota
+const onPageChangedFlota = (newPage) => {
+  currentPageFlota.value = newPage;
+};
+
+const onItemsPerPageChangedFlota = (newItemsPerPage) => {
+  itemsPerPageFlota.value = newItemsPerPage;
+  currentPageFlota.value = 1; // Reset a la primera página
 };
 
 const calcularPorcentaje = (cantidad, total) => {

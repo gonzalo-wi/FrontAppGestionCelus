@@ -31,6 +31,23 @@
         </div>
       </div>
 
+      <!-- Búsqueda por línea -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Número de Línea</label>
+        <div class="relative">
+          <input 
+            v-model="filtros.linea"
+            type="text" 
+            placeholder="Buscar por línea..."
+            class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+            @input="aplicarFiltros"
+          />
+          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+          </svg>
+        </div>
+      </div>
+
       <!-- Filtro por región -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Región</label>
@@ -40,26 +57,12 @@
           @change="aplicarFiltros"
         >
           <option value="">Todas las regiones</option>
-          <option value="REGION_1">Región 1</option>
-          <option value="REGION_2">Región 2</option>
-          <option value="REGION_3">Región 3</option>
-        </select>
-      </div>
-
-      <!-- Filtro por zona -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Zona</label>
-        <select 
-          v-model="filtros.zona"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-          @change="aplicarFiltros"
-        >
-          <option value="">Todas las zonas</option>
-          <option value="ZONA_NORTE">Zona Norte</option>
-          <option value="ZONA_SUR">Zona Sur</option>
-          <option value="ZONA_ESTE">Zona Este</option>
-          <option value="ZONA_OESTE">Zona Oeste</option>
-          <option value="ZONA_CENTRO">Zona Centro</option>
+          <option value="NORTE">NORTE</option>
+          <option value="SUR">SUR</option>
+          <option value="ESTE">ESTE</option>
+          <option value="OESTE">OESTE</option>
+          <option value="NAFA">NAFA</option>
+          <option value="LA_PLATA">LA PLATA</option>
         </select>
       </div>
 
@@ -71,65 +74,16 @@
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
           @change="aplicarFiltros"
         >
+          <option value="">Sin ordenar</option>
           <option value="numReparto_asc">Número de reparto (A-Z)</option>
           <option value="numReparto_desc">Número de reparto (Z-A)</option>
           <option value="region">Región</option>
-          <option value="zona">Zona</option>
-          <option value="celulares_asignados">Celulares asignados</option>
         </select>
       </div>
     </div>
 
-    <!-- Filtros adicionales -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-      <!-- Estado de asignación -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Estado de asignación</label>
-        <select 
-          v-model="filtros.estadoAsignacion"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-          @change="aplicarFiltros"
-        >
-          <option value="">Todos los estados</option>
-          <option value="con_celulares">Con celulares asignados</option>
-          <option value="sin_celulares">Sin celulares asignados</option>
-        </select>
-      </div>
-
-      <!-- Vista rápida -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Vista rápida</label>
-        <div class="flex space-x-2">
-          <button @click="filtroRapido('region_1')" 
-                  :class="[
-                    'px-3 py-2 text-sm rounded-lg border transition-colors',
-                    filtros.region === 'REGION_1' 
-                      ? 'bg-green-100 border-green-300 text-green-800' 
-                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                  ]">
-            R1
-          </button>
-          <button @click="filtroRapido('region_2')" 
-                  :class="[
-                    'px-3 py-2 text-sm rounded-lg border transition-colors',
-                    filtros.region === 'REGION_2' 
-                      ? 'bg-green-100 border-green-300 text-green-800' 
-                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                  ]">
-            R2
-          </button>
-          <button @click="filtroRapido('region_3')" 
-                  :class="[
-                    'px-3 py-2 text-sm rounded-lg border transition-colors',
-                    filtros.region === 'REGION_3' 
-                      ? 'bg-green-100 border-green-300 text-green-800' 
-                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                  ]">
-            R3
-          </button>
-        </div>
-      </div>
-
+    <!-- Estadísticas y filtros activos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
       <!-- Estadísticas rápidas -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Resultados</label>
@@ -146,17 +100,13 @@
         Reparto: {{ filtros.numReparto }}
         <button @click="filtros.numReparto = ''; aplicarFiltros()" class="ml-2 text-green-600 hover:text-green-800">×</button>
       </span>
+      <span v-if="filtros.linea" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        Línea: {{ filtros.linea }}
+        <button @click="filtros.linea = ''; aplicarFiltros()" class="ml-2 text-blue-600 hover:text-blue-800">×</button>
+      </span>
       <span v-if="filtros.region" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
         Región: {{ filtros.region }}
         <button @click="filtros.region = ''; aplicarFiltros()" class="ml-2 text-green-600 hover:text-green-800">×</button>
-      </span>
-      <span v-if="filtros.zona" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        Zona: {{ filtros.zona }}
-        <button @click="filtros.zona = ''; aplicarFiltros()" class="ml-2 text-green-600 hover:text-green-800">×</button>
-      </span>
-      <span v-if="filtros.estadoAsignacion" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        Estado: {{ filtros.estadoAsignacion === 'con_celulares' ? 'Con celulares' : 'Sin celulares' }}
-        <button @click="filtros.estadoAsignacion = ''; aplicarFiltros()" class="ml-2 text-green-600 hover:text-green-800">×</button>
       </span>
     </div>
   </div>
@@ -176,17 +126,15 @@ const emit = defineEmits(['filter']);
 
 const filtros = ref({
   numReparto: '',
+  linea: '',
   region: '',
-  zona: '',
-  estadoAsignacion: '',
-  ordenar: 'numReparto_asc'
+  ordenar: ''
 });
 
 const tieneFiltrosActivos = computed(() => {
   return filtros.value.numReparto || 
-         filtros.value.region || 
-         filtros.value.zona || 
-         filtros.value.estadoAsignacion;
+         filtros.value.linea ||
+         filtros.value.region;
 });
 
 const aplicarFiltros = () => {
@@ -196,26 +144,10 @@ const aplicarFiltros = () => {
 const limpiarFiltros = () => {
   filtros.value = {
     numReparto: '',
+    linea: '',
     region: '',
-    zona: '',
-    estadoAsignacion: '',
-    ordenar: 'numReparto_asc'
+    ordenar: ''
   };
-  aplicarFiltros();
-};
-
-const filtroRapido = (tipo) => {
-  switch (tipo) {
-    case 'region_1':
-      filtros.value.region = filtros.value.region === 'REGION_1' ? '' : 'REGION_1';
-      break;
-    case 'region_2':
-      filtros.value.region = filtros.value.region === 'REGION_2' ? '' : 'REGION_2';
-      break;
-    case 'region_3':
-      filtros.value.region = filtros.value.region === 'REGION_3' ? '' : 'REGION_3';
-      break;
-  }
   aplicarFiltros();
 };
 </script>

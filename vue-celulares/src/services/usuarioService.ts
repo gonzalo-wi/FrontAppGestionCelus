@@ -59,6 +59,21 @@ export const obtenerMisSolicitudes = () => {
   return api.get(`/api/usuarios/me/solicitudes`);
 };
 
+// Obtener solicitudes de mi región (todas las solicitudes de la región del usuario autenticado)
+export const obtenerSolicitudesMiRegion = () => {
+  return api.get(`/api/usuarios/mi-region/solicitudes`);
+};
+
+// Crear nueva solicitud del usuario autenticado
+export const crearMiSolicitud = (solicitud: any) => {
+  return api.post(`/api/usuarios/me/solicitudes`, solicitud);
+};
+
+// Actualizar línea de usuario en mi flota
+export const actualizarLineaFlota = (numReparto: string, numeroLinea: string | null) => {
+  return api.put(`/api/usuarios/flota/${numReparto}/linea`, { numeroLinea });
+};
+
 // Obtener estadísticas de mi región
 export const obtenerEstadisticasMiRegion = (fechaDesde?: string, fechaHasta?: string) => {
   const params = new URLSearchParams();

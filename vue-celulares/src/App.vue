@@ -29,7 +29,7 @@
 
     <!-- Navigation moderna -->
     <nav v-if="isAuthenticated" class="bg-white/80 backdrop-blur-xl shadow-xl border-b border-white/30 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
           <div class="flex items-center">
             <!-- Logo mejorado -->
@@ -44,12 +44,12 @@
                 <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   CellControl
                 </h1>
-                <p class="text-xs text-gray-500 font-medium">Gestión Inteligente</p>
+                <p class="text-xs text-gray-500 font-medium">Gestión de Activos</p>
               </div>
             </div>
             
             <!-- Navigation Links modernos -->
-            <div class="hidden lg:flex lg:space-x-2">
+            <div class="hidden lg:flex lg:space-x-4 ml-8">
               <RouterLink 
                 to="/" 
                 class="group relative px-4 py-2 rounded-2xl text-sm font-semibold transition-all duration-300 flex items-center gap-2"
@@ -126,10 +126,26 @@
                   </div>
                   Estadísticas
                 </RouterLink>
+                
+                <RouterLink 
+                  to="/admin/usuarios" 
+                  class="group relative px-4 py-2 rounded-2xl text-sm font-semibold transition-all duration-300 flex items-center gap-2"
+                  :class="$route.name === 'AdminUsuarios' 
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg transform scale-105' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-md'"
+                >
+                  <div class="p-1.5 rounded-xl" :class="$route.name === 'AdminUsuarios' ? 'bg-white/20' : 'bg-purple-100 group-hover:bg-purple-200'">
+                    <svg class="w-4 h-4" :class="$route.name === 'AdminUsuarios' ? 'text-white' : 'text-purple-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                  </div>
+                  Admin
+                </RouterLink>
               </template>
               
-              <!-- User accessible links -->
+              <!-- User accessible links - solo para usuarios normales -->
               <RouterLink 
+                v-if="!isAdmin"
                 to="/mis-solicitudes" 
                 class="group relative px-4 py-2 rounded-2xl text-sm font-semibold transition-all duration-300 flex items-center gap-2"
                 :class="$route.name === 'MisSolicitudes' 
@@ -259,12 +275,26 @@
                 </div>
                 Estadísticas
               </RouterLink>
+              <RouterLink to="/admin/usuarios" 
+                          class="group flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-semibold transition-all duration-300 hover:bg-white/80 hover:shadow-md"
+                          :class="$route.name === 'AdminUsuarios' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' : 'text-gray-700'"
+                          @click="mobileMenuOpen = false">
+                <div class="p-2 rounded-xl" :class="$route.name === 'AdminUsuarios' ? 'bg-white/20' : 'bg-purple-100'">
+                  <svg class="w-5 h-5" :class="$route.name === 'AdminUsuarios' ? 'text-white' : 'text-purple-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                  </svg>
+                </div>
+                Admin
+              </RouterLink>
             </template>
             
-            <RouterLink to="/mis-solicitudes" 
-                        class="group flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-semibold transition-all duration-300 hover:bg-white/80 hover:shadow-md"
-                        :class="$route.name === 'MisSolicitudes' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg' : 'text-gray-700'"
-                        @click="mobileMenuOpen = false">
+            <!-- Enlaces para usuarios normales -->
+            <RouterLink 
+              v-if="!isAdmin"
+              to="/mis-solicitudes" 
+              class="group flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-semibold transition-all duration-300 hover:bg-white/80 hover:shadow-md"
+              :class="$route.name === 'MisSolicitudes' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg' : 'text-gray-700'"
+              @click="mobileMenuOpen = false">
               <div class="p-2 rounded-xl" :class="$route.name === 'MisSolicitudes' ? 'bg-white/20' : 'bg-cyan-100'">
                 <svg class="w-5 h-5" :class="$route.name === 'MisSolicitudes' ? 'text-white' : 'text-cyan-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -314,6 +344,153 @@
     <main class="flex-1">
       <RouterView />
     </main>
+
+    <!-- Footer moderno - excluido del login -->
+    <footer v-if="isAuthenticated" class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white relative overflow-hidden">
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 opacity-10">
+        <div class="w-full h-full" style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0); background-size: 40px 40px;"></div>
+      </div>
+      
+      <!-- Geometric decorations -->
+      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500"></div>
+      
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <!-- Company Info -->
+          <div class="md:col-span-2">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl blur opacity-40"></div>
+                <div class="relative bg-white/10 backdrop-blur-sm rounded-2xl p-3">
+                  <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  CellControl
+                </h3>
+                <p class="text-blue-200 text-sm font-medium">Sistema de Gestión Inteligente</p>
+              </div>
+            </div>
+            <p class="text-gray-300 text-sm leading-relaxed mb-6 max-w-md">
+              Plataforma integral para la administración eficiente de dispositivos móviles, 
+              control de usuarios y seguimiento de movimientos en tiempo real.
+            </p>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2 text-green-400">
+                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium">Sistema Activo</span>
+              </div>
+              <div class="text-gray-400 text-sm">
+                Versión 2.0 - {{ new Date().getFullYear() }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div>
+            <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              Accesos Rápidos
+            </h4>
+            <ul class="space-y-3">
+              <li>
+                <RouterLink to="/" class="text-gray-300 hover:text-blue-400 transition-colors duration-200 text-sm flex items-center gap-2 group">
+                  <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  Panel Principal
+                </RouterLink>
+              </li>
+              <li v-if="isAdmin">
+                <RouterLink to="/celulares" class="text-gray-300 hover:text-green-400 transition-colors duration-200 text-sm flex items-center gap-2 group">
+                  <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  Gestión de Dispositivos
+                </RouterLink>
+              </li>
+              <li v-if="isAdmin">
+                <RouterLink to="/estadisticas" class="text-gray-300 hover:text-purple-400 transition-colors duration-200 text-sm flex items-center gap-2 group">
+                  <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  Reportes y Analytics
+                </RouterLink>
+              </li>
+              <li v-if="!isAdmin">
+                <RouterLink to="/mis-solicitudes" class="text-gray-300 hover:text-cyan-400 transition-colors duration-200 text-sm flex items-center gap-2 group">
+                  <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  Mis Solicitudes
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+
+          <!-- User Info -->
+          <div>
+            <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              Sesión Actual
+            </h4>
+            <div class="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <span class="text-white font-bold text-sm">
+                    {{ (currentUser?.name || 'U').charAt(0).toUpperCase() }}
+                  </span>
+                </div>
+                <div>
+                  <p class="text-white font-medium text-sm">{{ currentUser?.name || 'Usuario' }}</p>
+                  <div class="flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full" :class="isAdmin ? 'bg-red-400' : 'bg-blue-400'"></div>
+                    <p class="text-gray-400 text-xs capitalize">{{ currentUser?.role || 'user' }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="text-gray-400 text-xs">
+                <div class="flex items-center justify-between">
+                  <span>Última actividad:</span>
+                  <span>Ahora</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="border-t border-white/10 mt-12 pt-8">
+          <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="text-gray-400 text-sm text-center md:text-left">
+              <p>© {{ new Date().getFullYear() }} CellControl - Desarrollado por Gonzalo Wiñazki</p>
+            </div>
+            <div class="flex items-center gap-6">
+              <div class="flex items-center gap-2 text-gray-400 text-sm">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Seguro y Confiable
+              </div>
+              <div class="flex items-center gap-2 text-gray-400 text-sm">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Rendimiento Óptimo
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
