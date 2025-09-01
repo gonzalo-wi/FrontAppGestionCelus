@@ -67,5 +67,11 @@ export const celularService = {
   eliminar(numeroSerie: number) {
     console.log('Eliminando celular:', numeroSerie);
     return api.delete<void>(`${API_URL}/celulares/${numeroSerie}`);
+  },
+
+  // Buscar celulares por número de serie (para autocompletado)
+  buscarPorSerie(query: string) {
+    console.log('Buscando celulares por serie:', query);
+    return api.get<Celular[]>(`${API_URL}/celulares/buscar?serie=${encodeURIComponent(query)}`);
   }
 };

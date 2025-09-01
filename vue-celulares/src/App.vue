@@ -111,6 +111,36 @@
                   </div>
                   Solicitudes
                 </RouterLink>
+
+                <RouterLink 
+                  to="/proveedores" 
+                  class="group relative px-4 py-2 rounded-2xl text-sm font-semibold transition-all duration-300 flex items-center gap-2"
+                  :class="$route.name === 'Proveedores' 
+                    ? 'bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white shadow-lg transform scale-105' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-md'"
+                >
+                  <div class="p-1.5 rounded-xl" :class="$route.name === 'Proveedores' ? 'bg-white/20' : 'bg-fuchsia-100 group-hover:bg-fuchsia-200'">
+                    <svg class="w-4 h-4" :class="$route.name === 'Proveedores' ? 'text-white' : 'text-fuchsia-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h6l7 10h5M3 7l4 12h12"></path>
+                    </svg>
+                  </div>
+                  Proveedores
+                </RouterLink>
+
+                <RouterLink 
+                  to="/ordenes-reparacion" 
+                  class="group relative px-4 py-2 rounded-2xl text-sm font-semibold transition-all duration-300 flex items-center gap-2"
+                  :class="$route.name === 'OrdenesReparacion' 
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg transform scale-105' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 hover:shadow-md'"
+                >
+                  <div class="p-1.5 rounded-xl" :class="$route.name === 'OrdenesReparacion' ? 'bg-white/20' : 'bg-orange-100 group-hover:bg-orange-200'">
+                    <svg class="w-4 h-4" :class="$route.name === 'OrdenesReparacion' ? 'text-white' : 'text-orange-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6l3-3 3 3v6m5 4H4" />
+                    </svg>
+                  </div>
+                  Órdenes
+                </RouterLink>
                 
                 <RouterLink 
                   to="/estadisticas" 
@@ -263,6 +293,28 @@
                   </svg>
                 </div>
                 Solicitudes
+              </RouterLink>
+              <RouterLink to="/proveedores" 
+                          class="group flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-semibold transition-all duration-300 hover:bg-white/80 hover:shadow-md"
+                          :class="$route.name === 'Proveedores' ? 'bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white shadow-lg' : 'text-gray-700'"
+                          @click="mobileMenuOpen = false">
+                <div class="p-2 rounded-xl" :class="$route.name === 'Proveedores' ? 'bg-white/20' : 'bg-fuchsia-100'">
+                  <svg class="w-5 h-5" :class="$route.name === 'Proveedores' ? 'text-white' : 'text-fuchsia-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h6l7 10h5M3 7l4 12h12"></path>
+                  </svg>
+                </div>
+                Proveedores
+              </RouterLink>
+              <RouterLink to="/ordenes-reparacion" 
+                          class="group flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-semibold transition-all duration-300 hover:bg-white/80 hover:shadow-md"
+                          :class="$route.name === 'OrdenesReparacion' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg' : 'text-gray-700'"
+                          @click="mobileMenuOpen = false">
+                <div class="p-2 rounded-xl" :class="$route.name === 'OrdenesReparacion' ? 'bg-white/20' : 'bg-orange-100'">
+                  <svg class="w-5 h-5" :class="$route.name === 'OrdenesReparacion' ? 'text-white' : 'text-orange-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6l3-3 3 3v6m5 4H4" />
+                  </svg>
+                </div>
+                Órdenes
               </RouterLink>
               <RouterLink to="/estadisticas" 
                           class="group flex items-center gap-3 px-4 py-3 rounded-2xl text-base font-semibold transition-all duration-300 hover:bg-white/80 hover:shadow-md"
@@ -421,6 +473,22 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                   </svg>
                   Reportes y Analytics
+                </RouterLink>
+              </li>
+              <li v-if="isAdmin">
+                <RouterLink to="/proveedores" class="text-gray-300 hover:text-fuchsia-400 transition-colors duration-200 text-sm flex items-center gap-2 group">
+                  <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                  Proveedores
+                </RouterLink>
+              </li>
+              <li v-if="isAdmin">
+                <RouterLink to="/ordenes-reparacion" class="text-gray-300 hover:text-orange-400 transition-colors duration-200 text-sm flex items-center gap-2 group">
+                  <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  Órdenes
                 </RouterLink>
               </li>
               <li v-if="!isAdmin">

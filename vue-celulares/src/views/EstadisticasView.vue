@@ -1,22 +1,5 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
-    <!-- Banner de Modo Desarrollo -->
-    <div v-if="modoDesarrollo" 
-         class="mb-6 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded-lg backdrop-blur-sm bg-opacity-90">
-      <div class="flex items-center">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm font-medium">
-            Modo Desarrollo: Mostrando datos de ejemplo. El backend no está disponible.
-          </p>
-        </div>
-      </div>
-    </div>
-
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -556,7 +539,6 @@ const estadisticasRegiones = ref<EstadisticasRegion[]>([]);
 const regionSeleccionada = ref<string>('');
 const cargando = ref(false);
 const error = ref<string>('');
-const modoDesarrollo = ref(false);
 const mostrarDetalleMensual = ref(false); // Collapsed por defecto
 
 // Computed properties
@@ -675,23 +657,13 @@ const barChartOptions = {
 const cargarEstadisticas = async () => {
   cargando.value = true;
   error.value = '';
-  modoDesarrollo.value = false; // Reset modo desarrollo
   
   try {
     estadisticas.value = await estadisticasService.obtenerEstadisticas();
-    
-    // Detectar si estamos en modo desarrollo
-    if (estadisticas.value?.estadisticasMensuales && estadisticas.value.estadisticasMensuales.length > 0) {
-      const primerMes = estadisticas.value.estadisticasMensuales[0];
-      // Verificar si son datos de prueba (mes en español y valores específicos)
-      if (primerMes.mes === 'Enero' && primerMes.movimientos === 45) {
-        modoDesarrollo.value = true;
-      }
-    }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error al cargar estadísticas:', err);
-    error.value = 'Error al cargar las estadísticas. Verifique la conexión con el servidor.';
-    modoDesarrollo.value = true;
+    // Usar el mensaje específico del error
+    error.value = err.message || 'Error al cargar las estadísticas. Verifique la conexión con el servidor.';
     estadisticas.value = null;
   } finally {
     cargando.value = false;
@@ -712,19 +684,10 @@ const cargarEstadisticasRegiones = async () => {
     console.log('Estadísticas de regiones después de filtro:', regionesData);
     
     estadisticasRegiones.value = regionesData;
-    
-    // Detectar modo desarrollo si hay datos de prueba
-    if (estadisticasRegiones.value.length > 0) {
-      const primeraRegion = estadisticasRegiones.value.find(r => r.region === 'NORTE');
-      if (primeraRegion && primeraRegion.totalSolicitudes === 45) {
-        modoDesarrollo.value = true;
-        console.log('Modo desarrollo detectado por datos de prueba');
-      }
-    }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error al cargar estadísticas por región:', err);
-    error.value = 'Error al cargar las estadísticas por región. Verifique la conexión con el servidor.';
-    modoDesarrollo.value = true;
+    // Usar el mensaje específico del error
+    error.value = err.message || 'Error al cargar las estadísticas por región. Verifique la conexión con el servidor.';
     estadisticasRegiones.value = [];
   } finally {
     cargando.value = false;

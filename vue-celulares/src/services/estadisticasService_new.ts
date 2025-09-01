@@ -81,41 +81,13 @@ export interface SolicitudDetalle {
 }
 
 class EstadisticasService {
-  // Método auxiliar para manejar errores de manera consistente
-  private manejarError(error: any, operacion: string): never {
-    console.error(`Error en ${operacion}:`, error);
-    
-    if (error.response) {
-      // El servidor respondió con un código de error
-      const status = error.response.status;
-      const message = error.response.data?.message || error.response.data?.error || 'Error del servidor';
-      
-      switch (status) {
-        case 401:
-          throw new Error('No autorizado. Por favor, inicie sesión nuevamente.');
-        case 403:
-          throw new Error(`No tiene permisos para ${operacion}.`);
-        case 404:
-          throw new Error(`Recurso no encontrado para ${operacion}.`);
-        case 500:
-          throw new Error(`Error interno del servidor en ${operacion}: ${message}`);
-        default:
-          throw new Error(`Error del servidor (${status}) en ${operacion}: ${message}`);
-      }
-    } else if (error.request) {
-      // La petición se hizo pero no se recibió respuesta
-      throw new Error('No se pudo conectar con el servidor. Verifique su conexión a internet.');
-    } else {
-      // Error en la configuración de la petición
-      throw new Error(`Error de configuración en ${operacion}: ${error.message}`);
-    }
-  }
   async obtenerEstadisticas(): Promise<EstadisticasResumen> {
     try {
       const response = await api.get('/api/estadisticas/totales');
       return response.data;
-    } catch (error: any) {
-      this.manejarError(error, 'obtener estadísticas generales');
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error);
+      throw new Error('No se pudieron cargar las estadísticas. Verifique la conexión con el servidor.');
     }
   }
 
@@ -127,8 +99,9 @@ class EstadisticasService {
       });
       
       return this.adaptarDatosRegion(response.data);
-    } catch (error: any) {
-      this.manejarError(error, `obtener estadísticas de la región ${region}`);
+    } catch (error) {
+      console.error(`Error al obtener estadísticas para región ${region}:`, error);
+      throw new Error(`No se pudieron cargar las estadísticas de la región ${region}. Verifique la conexión con el servidor.`);
     }
   }
 
@@ -151,8 +124,9 @@ class EstadisticasService {
       
       // Adaptar datos del backend al formato esperado por la UI
       return response.data.map((region: any) => this.adaptarDatosRegion(region));
-    } catch (error: any) {
-      this.manejarError(error, 'obtener estadísticas de todas las regiones');
+    } catch (error) {
+      console.error('Error al obtener estadísticas de todas las regiones:', error);
+      throw new Error('No se pudieron cargar las estadísticas de todas las regiones. Verifique la conexión con el servidor.');
     }
   }
 

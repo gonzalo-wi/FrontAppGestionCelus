@@ -4,7 +4,7 @@ import type { MovimientoDetalle, SolicitudDetalle, EstadisticasMensuales } from 
 class ExcelService {
   exportarEstadisticas(estadisticasMensuales: EstadisticasMensuales[], nombreArchivo: string = 'estadisticas_mensuales.xlsx') {
     // Preparar datos para Excel
-    const datosExcel = estadisticasMensuales.map(estadistica => ({
+  const datosExcel = estadisticasMensuales.map((estadistica:any) => ({
       'Mes': estadistica.mes,
       'Año': estadistica.year,
       'Movimientos': estadistica.movimientos,
@@ -18,7 +18,7 @@ class ExcelService {
     
     datosExcel.push({
       'Mes': 'TOTAL',
-      'Año': '',
+      'Año': null,
       'Movimientos': totalMovimientos,
       'Solicitudes': totalSolicitudes,
       'Total': totalMovimientos + totalSolicitudes
@@ -45,15 +45,15 @@ class ExcelService {
   }
 
   exportarSolicitudes(solicitudes: SolicitudDetalle[], nombreArchivo: string = 'solicitudes.xlsx') {
-    const datosExcel = solicitudes.map(solicitud => ({
+    const datosExcel = solicitudes.map((solicitud:any) => ({
       'ID': solicitud.id,
-      'Fecha Solicitud': new Date(solicitud.fechaSolicitud).toLocaleDateString('es-AR'),
-      'Tipo Solicitud': this.formatearTipoSolicitud(solicitud.tipoSolicitud),
-      'Empleado': `${solicitud.empleado.nombre} ${solicitud.empleado.apellido}`,
-      'Legajo': solicitud.empleado.legajo,
-      'Región': this.formatearRegion(solicitud.empleado.region),
-      'Motivo': solicitud.motivo,
-      'Estado': this.formatearEstado(solicitud.estado)
+      'Fecha Solicitud': solicitud.fechaSolicitud ? new Date(solicitud.fechaSolicitud).toLocaleDateString('es-AR') : '',
+      'Tipo Solicitud': this.formatearTipoSolicitud(solicitud.tipoSolicitud || solicitud.tipo),
+      'Empleado': solicitud.empleado ? `${solicitud.empleado.nombre} ${solicitud.empleado.apellido}` : '',
+      'Legajo': solicitud.empleado?.legajo || '',
+      'Región': solicitud.empleado ? this.formatearRegion(solicitud.empleado.region) : '',
+      'Motivo': solicitud.motivo || '',
+      'Estado': this.formatearEstado(solicitud.estado || solicitud.status || '')
     }));
 
     this.exportarAExcel([{ nombre: 'Solicitudes', datos: datosExcel }], nombreArchivo);
@@ -66,7 +66,7 @@ class ExcelService {
     nombreArchivo: string = 'reporte_completo.xlsx'
   ) {
     // Hoja de estadísticas
-    const datosEstadisticas = estadisticasMensuales.map(estadistica => ({
+  const datosEstadisticas = estadisticasMensuales.map((estadistica:any) => ({
       'Mes': estadistica.mes,
       'Año': estadistica.year,
       'Movimientos': estadistica.movimientos,
@@ -80,7 +80,7 @@ class ExcelService {
     
     datosEstadisticas.push({
       'Mes': 'TOTAL',
-      'Año': '',
+      'Año': null,
       'Movimientos': totalMovimientos,
       'Solicitudes': totalSolicitudes,
       'Total': totalMovimientos + totalSolicitudes
@@ -101,15 +101,15 @@ class ExcelService {
     }));
 
     // Hoja de solicitudes
-    const datosSolicitudes = solicitudes.map(solicitud => ({
+    const datosSolicitudes = solicitudes.map((solicitud:any) => ({
       'ID': solicitud.id,
-      'Fecha Solicitud': new Date(solicitud.fechaSolicitud).toLocaleDateString('es-AR'),
-      'Tipo Solicitud': this.formatearTipoSolicitud(solicitud.tipoSolicitud),
-      'Empleado': `${solicitud.empleado.nombre} ${solicitud.empleado.apellido}`,
-      'Legajo': solicitud.empleado.legajo,
-      'Región': this.formatearRegion(solicitud.empleado.region),
-      'Motivo': solicitud.motivo,
-      'Estado': this.formatearEstado(solicitud.estado)
+      'Fecha Solicitud': solicitud.fechaSolicitud ? new Date(solicitud.fechaSolicitud).toLocaleDateString('es-AR') : '',
+      'Tipo Solicitud': this.formatearTipoSolicitud(solicitud.tipoSolicitud || solicitud.tipo),
+      'Empleado': solicitud.empleado ? `${solicitud.empleado.nombre} ${solicitud.empleado.apellido}` : '',
+      'Legajo': solicitud.empleado?.legajo || '',
+      'Región': solicitud.empleado ? this.formatearRegion(solicitud.empleado.region) : '',
+      'Motivo': solicitud.motivo || '',
+      'Estado': this.formatearEstado(solicitud.estado || solicitud.status || '')
     }));
 
     const hojas = [
@@ -117,6 +117,79 @@ class ExcelService {
       { nombre: 'Movimientos', datos: datosMovimientos },
       { nombre: 'Solicitudes', datos: datosSolicitudes }
     ];
+
+    this.exportarAExcel(hojas, nombreArchivo);
+  }
+
+  // Nueva exportación de órdenes de reparación
+  exportarOrdenesReparacion(
+    ordenes: any[],
+    nombreArchivo: string = 'ordenes_reparacion.xlsx'
+  ) {
+    const datosOrdenes = ordenes.map(o => ({
+      'ID': o.id,
+      'Número Orden': o.numeroOrden || ('#' + o.id),
+      'Fecha Creación': o.fechaCreacion ? new Date(o.fechaCreacion).toLocaleString('es-AR') : '',
+      'Proveedor': o.proveedor?.nombre || '',
+      'Diagnóstico': o.diagnostico || '',
+      'Costo Estimado': o.costoEstimado ?? '',
+      'Costo Final': o.costoFinal ?? '',
+      'Total Items': (o.reparacionItems||[]).reduce((acc: number, it: any)=> acc + (it.costoReparacion || 0), 0),
+      'Estado': o.estado || '',
+      'Fecha Est Entrega': o.fechaEstimadaEntrega ? new Date(o.fechaEstimadaEntrega).toLocaleDateString('es-AR') : '',
+      'Fecha Real Entrega': o.fechaRealEntrega ? new Date(o.fechaRealEntrega).toLocaleDateString('es-AR') : '',
+      'Observaciones': o.observaciones || '',
+      'Cantidad Items': (o.reparacionItems?.length || 0)
+    }));
+
+    // Crear hoja de items detallados
+    let hojas = [{ nombre: 'Ordenes', datos: datosOrdenes }];
+
+    const itemsDetallados: any[] = [];
+    
+    ordenes.forEach(orden => {
+      if (orden.reparacionItems && orden.reparacionItems.length > 0) {
+        // Agregar cada item
+        orden.reparacionItems.forEach((item: any) => {
+          itemsDetallados.push({
+            'Orden': orden.numeroOrden || ('#' + orden.id),
+            'Proveedor': orden.proveedor?.nombre || '',
+            'Modelo Celular': `${item.celular?.marca || ''} ${item.celular?.modelo || ''}`.trim(),
+            'Serie': item.celular?.numeroSerie || '',
+            'Motivo': item.motivoReparacion || '',
+            'Precio': item.costoReparacion || 0,
+            'Observaciones': item.observaciones || ''
+          });
+        });
+        
+        // Agregar fila de total de la orden
+        const totalOrden = orden.reparacionItems.reduce((acc: number, it: any) => acc + (it.costoReparacion || 0), 0);
+        itemsDetallados.push({
+          'Orden': `TOTAL ORDEN ${orden.numeroOrden || '#' + orden.id}`,
+          'Proveedor': '',
+          'Modelo Celular': '',
+          'Serie': '',
+          'Motivo': '',
+          'Precio': totalOrden,
+          'Observaciones': `Total de ${orden.reparacionItems.length} items`
+        });
+        
+        // Agregar línea en blanco para separar órdenes
+        itemsDetallados.push({
+          'Orden': '',
+          'Proveedor': '',
+          'Modelo Celular': '',
+          'Serie': '',
+          'Motivo': '',
+          'Precio': '',
+          'Observaciones': ''
+        });
+      }
+    });
+
+    if (itemsDetallados.length > 0) {
+      hojas.push({ nombre: 'Items Detallados', datos: itemsDetallados });
+    }
 
     this.exportarAExcel(hojas, nombreArchivo);
   }
