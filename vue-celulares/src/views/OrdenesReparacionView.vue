@@ -256,6 +256,21 @@ const exportarOrdenes = async () => {
   }
 };
 
+// Cambiar estado de orden
+const estados = ['PENDIENTE', 'ENVIADA', 'REPARANDO', 'REPARADA'];
+const cambiarEstado = async (orden, nuevoEstado) => {
+  try {
+    if (!confirm(`¿Cambiar estado de la orden ${orden.numeroOrden} a ${nuevoEstado}?`)) {
+      return;
+    }
+    await ordenReparacionService.cambiarEstado(orden.id, nuevoEstado);
+    showNotification(`Estado cambiado a ${nuevoEstado}`);
+    await cargarDatos(); // Recargar datos para ver el cambio
+  } catch (e) {
+    showNotification(e.message || 'Error al cambiar estado', 'error');
+  }
+};
+
 onMounted(() => cargarDatos());
 </script>
 
@@ -418,9 +433,10 @@ onMounted(() => cargarDatos());
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatMoney(calcularTotalOrden(o)) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="['inline-flex px-3 py-1 text-xs font-medium rounded-full shadow-lg',
+                      o.estado==='PENDIENTE' ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white' :
                       o.estado==='ENVIADA' ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white' :
-                      o.estado==='EN_REPARACION' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' :
-                      o.estado==='ENTREGADA' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white']">{{ o.estado || 'SIN_ESTADO' }}</span>
+                      o.estado==='REPARANDO' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' :
+                      o.estado==='REPARADA' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white']">{{ o.estado || 'SIN_ESTADO' }}</span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ formatDate(o.fechaEstimadaEntrega) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -428,6 +444,9 @@ onMounted(() => cargarDatos());
                       <button @click="verItems(o)" class="p-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all" title="Ver items">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                       </button>
+                      <select @change="cambiarEstado(o, $event.target.value)" :value="o.estado" class="text-xs px-2 py-1 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <option v-for="estado in estados" :key="estado" :value="estado">{{ estado }}</option>
+                      </select>
                     </div>
                   </td>
                 </tr>
@@ -444,9 +463,10 @@ onMounted(() => cargarDatos());
                   <p class="text-xs text-gray-500">Items: {{ (o.reparacionItems?.length)||0 }}</p>
                 </div>
                 <span :class="['inline-flex px-3 py-1 text-xs font-medium rounded-full',
+                  o.estado==='PENDIENTE' ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white' :
                   o.estado==='ENVIADA' ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white' :
-                  o.estado==='EN_REPARACION' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' :
-                  o.estado==='ENTREGADA' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white']">{{ o.estado || 'SIN_ESTADO' }}</span>
+                  o.estado==='REPARANDO' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' :
+                  o.estado==='REPARADA' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white']">{{ o.estado || 'SIN_ESTADO' }}</span>
               </div>
               <div class="text-sm text-gray-700 mb-3 line-clamp-2">{{ o.diagnostico }}</div>
               <div class="text-xs text-gray-500 mb-4 flex flex-wrap gap-3">
@@ -456,6 +476,9 @@ onMounted(() => cargarDatos());
               </div>
               <div class="flex items-center gap-3 pt-3 border-t border-gray-200">
                 <button @click="verItems(o)" class="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white py-2 px-4 rounded-xl font-semibold text-sm shadow-lg">Items</button>
+                <select @change="cambiarEstado(o, $event.target.value)" :value="o.estado" class="px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm">
+                  <option v-for="estado in estados" :key="estado" :value="estado">{{ estado }}</option>
+                </select>
               </div>
             </div>
           </div>

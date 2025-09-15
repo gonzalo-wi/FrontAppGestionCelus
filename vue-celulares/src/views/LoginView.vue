@@ -1,5 +1,56 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    
+    <!-- Pantalla de carga de login -->
+    <div v-if="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl">
+      <div class="text-center">
+        <!-- Spinner principal -->
+        <div class="relative mb-8">
+          <div class="w-24 h-24 border-4 border-white/20 rounded-full animate-spin">
+            <div class="absolute top-0 left-0 w-24 h-24 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+          </div>
+          <div class="absolute inset-0 w-24 h-24 border-4 border-transparent border-t-purple-400 rounded-full animate-ping opacity-20"></div>
+          
+          <!-- Ícono central -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+              <svg class="w-6 h-6 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Texto con animación -->
+        <div class="text-white text-center">
+          <h3 class="text-2xl font-bold mb-3 animate-pulse">Iniciando Sesión</h3>
+          <p class="text-purple-200 font-medium mb-6">{{ loginStatus || 'Preparando...' }}</p>
+          
+          <!-- Pasos de carga -->
+          <div class="space-y-2 text-sm text-purple-300">
+            <div class="flex items-center justify-center gap-2 animate-fade-in">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Conectando al servidor...</span>
+            </div>
+            <div class="flex items-center justify-center gap-2 animate-fade-in animation-delay-500">
+              <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <span>Verificando usuario...</span>
+            </div>
+            <div class="flex items-center justify-center gap-2 animate-fade-in animation-delay-1000">
+              <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+              <span>Cargando perfiles...</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barra de progreso animada -->
+        <div class="mt-8 w-80 mx-auto">
+          <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 rounded-full animate-pulse transform-gpu animate-slide-right"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Animated Background -->
     <div class="absolute inset-0">
       <!-- Gradient Orbs -->
@@ -159,24 +210,36 @@ const password = ref('');
 const error = ref('');
 const loading = ref(false);
 
+const loginStatus = ref('');
+
 const login = async () => {
   if (loading.value) return;
   
   error.value = '';
   loading.value = true;
+  loginStatus.value = 'Conectando al servidor...';
 
   try {
     console.log('🔑 Intentando login con:', username.value);
     
-    // Agregar un delay mínimo para mostrar la animación de carga
-    const [success] = await Promise.all([
-      authService.login(username.value, password.value),
-      new Promise(resolve => setTimeout(resolve, 800)) // Delay mínimo de 800ms
-    ]);
+    // Simular pasos de carga para mejor UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+    loginStatus.value = 'Verificando credenciales...';
+    
+    const success = await authService.login(username.value, password.value);
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    loginStatus.value = 'Cargando perfil de usuario...';
     
     if (success) {
       const user = authService.getCurrentUser();
       console.log('✅ Login exitoso, usuario:', user);
+      
+      await new Promise(resolve => setTimeout(resolve, 400));
+      loginStatus.value = '¡Bienvenido! Redirigiendo...';
+      
+      // Pequeño delay adicional para mostrar mensaje de bienvenida
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Redirigir a la ruta original (si existe) o al home
       const redirect = (route.query.redirect as string) || '/';
@@ -190,6 +253,7 @@ const login = async () => {
     error.value = 'Error de conexión. Intenta nuevamente.';
   } finally {
     loading.value = false;
+    loginStatus.value = '';
   }
 };
 

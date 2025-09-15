@@ -14,8 +14,13 @@ export interface Usuario {
 
 export interface Celular {
   numeroSerie?: number; // Lo genera el backend
+  codigoInterno: string;
   marca: string;
   modelo: string;
+  tieneTemplado: boolean;
+  tieneFunda: boolean;
+  codigoDeAplicacion?: string | null;
+  cantRoturas: number;
   estado: EstadoCelular;
   usuario?: Usuario | null;
 }

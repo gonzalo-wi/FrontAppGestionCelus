@@ -65,6 +65,54 @@
         </select>
       </div>
 
+      <!-- Nuevos campos agregados -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Código de Aplicación</label>
+          <input 
+            v-model="form.codigoDeAplicacion"
+            type="text" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Ej: APP001"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad de Roturas</label>
+          <input 
+            v-model.number="form.cantRoturas"
+            type="number" 
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-center">
+          <input 
+            id="tieneTemplado"
+            v-model="form.tieneTemplado"
+            type="checkbox" 
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label for="tieneTemplado" class="ml-2 block text-sm font-medium text-gray-700">
+            Tiene Templado
+          </label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            id="tieneFunda"
+            v-model="form.tieneFunda"
+            type="checkbox" 
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label for="tieneFunda" class="ml-2 block text-sm font-medium text-gray-700">
+            Tiene Funda
+          </label>
+        </div>
+      </div>
+
       <div class="flex justify-end pt-4 border-t border-gray-200">
         <button type="submit" :disabled="loading"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
@@ -95,6 +143,10 @@ const form = reactive({
   codigoInterno: '',
   marca: '',
   modelo: '',
+  tieneTemplado: false,
+  tieneFunda: false,
+  codigoDeAplicacion: '',
+  cantRoturas: 0,
   estado: 'NUEVO'
 });
 
@@ -104,6 +156,10 @@ const resetForm = () => {
   form.codigoInterno = '';
   form.marca = '';
   form.modelo = '';
+  form.tieneTemplado = false;
+  form.tieneFunda = false;
+  form.codigoDeAplicacion = '';
+  form.cantRoturas = 0;
   form.estado = 'NUEVO';
 };
 
@@ -117,6 +173,10 @@ const guardar = () => {
     codigoInterno: form.codigoInterno,
     marca: form.marca,
     modelo: form.modelo,
+    tieneTemplado: form.tieneTemplado,
+    tieneFunda: form.tieneFunda,
+    codigoDeAplicacion: form.codigoDeAplicacion || null,
+    cantRoturas: form.cantRoturas,
     estado: form.estado
   };
   
@@ -131,6 +191,10 @@ watch(() => props.celular, (newCelular) => {
     form.codigoInterno = newCelular.codigoInterno || newCelular.numeroSerie || '';
     form.marca = newCelular.marca;
     form.modelo = newCelular.modelo;
+    form.tieneTemplado = newCelular.tieneTemplado || false;
+    form.tieneFunda = newCelular.tieneFunda || false;
+    form.codigoDeAplicacion = newCelular.codigoDeAplicacion || '';
+    form.cantRoturas = newCelular.cantRoturas || 0;
     form.estado = newCelular.estado;
     console.log('📝 Formulario actualizado:', form);
   } else {

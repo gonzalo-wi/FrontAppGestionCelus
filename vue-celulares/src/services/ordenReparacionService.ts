@@ -162,6 +162,18 @@ class OrdenReparacionService {
     }
   }
 
+  // Cambiar estado de una orden
+  async cambiarEstado(ordenId: number, estado: string): Promise<OrdenReparacion> {
+    try {
+      console.log('Cambiando estado de orden:', ordenId, 'a:', estado);
+      const response = await api.put(`/api/ordenes-reparacion/${ordenId}/estado?estado=${estado}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error al cambiar estado de orden:', error);
+      throw this.manejarError(error, 'cambiar estado de orden');
+    }
+  }
+
   // Manejo de errores centralizado
   private manejarError(error: any, operacion: string): never {
     if (error.response) {

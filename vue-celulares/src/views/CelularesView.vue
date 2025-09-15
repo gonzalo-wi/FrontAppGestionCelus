@@ -67,6 +67,9 @@ const celularColumns = [
   { key: 'codigoInterno', title: 'Código' },
   { key: 'marca', title: 'Marca' },
   { key: 'modelo', title: 'Modelo' },
+  { key: 'tieneTemplado', title: 'Templado' },
+  { key: 'tieneFunda', title: 'Funda' },
+  { key: 'cantRoturas', title: 'Roturas' },
   { key: 'estado', title: 'Estado' },
   { key: 'usuario.numReparto', title: 'Usuario' }
 ];
@@ -119,7 +122,7 @@ const movimientosFiltrados = computed(() => {
   return movimientos.value.filter(movimiento => {
     const { fechaDesde, fechaHasta, usuario, celular, descripcion, region } = movimientoFilters.value;
     
-    // Filtro por fecha desde
+   
     if (fechaDesde) {
       const fechaMovimiento = new Date(movimiento.fecha);
       const fechaDesdeDate = new Date(fechaDesde);
@@ -128,7 +131,7 @@ const movimientosFiltrados = computed(() => {
       }
     }
     
-    // Filtro por fecha hasta
+   
     if (fechaHasta) {
       const fechaMovimiento = new Date(movimiento.fecha);
       const fechaHastaDate = new Date(fechaHasta);
@@ -137,22 +140,22 @@ const movimientosFiltrados = computed(() => {
       }
     }
     
-    // Filtro por usuario
+    
     if (usuario && movimiento.usuario?.numReparto !== usuario) {
       return false;
     }
     
-    // Filtro por celular
+    
     if (celular && movimiento.celular?.numeroSerie !== parseInt(celular)) {
       return false;
     }
     
-    // Filtro por descripción
+    
     if (descripcion && !movimiento.descripcion?.toLowerCase().includes(descripcion.toLowerCase())) {
       return false;
     }
     
-    // Filtro por región
+    
     if (region && movimiento.usuario?.region !== region) {
       return false;
     }
@@ -594,55 +597,72 @@ onMounted(() => {
           </div>
           
           <div v-else class="space-y-4">
-            <!-- Vista escritorio - Tabla -->
+           
             <div class="hidden lg:block overflow-x-auto rounded-2xl border border-gray-200/50 shadow-xl">
-              <table class="w-full divide-y divide-gray-200/50" style="min-width: 1000px;">
+              <table class="w-full divide-y divide-gray-200/50" style="min-width: 950px;">
                 <thead class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
                   <tr>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Código</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Marca</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Modelo</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Estado</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Usuario</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[140px]">Acciones</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">Código</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[80px]">App</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[80px]">Marca</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[80px]">Modelo</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase tracking-wider min-w-[60px]" title="Templado">Templ</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase tracking-wider min-w-[60px]" title="Funda">Funda</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase tracking-wider min-w-[60px]" title="Cantidad de Roturas">Rot</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[80px]">Estado</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[90px]">Usuario</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">Acciones</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white/90 backdrop-blur-sm divide-y divide-gray-200/50">
                   <tr v-for="celular in celularesPaginados" 
                       :key="celular.codigoInterno" 
                       class="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 group">
-                    <td class="px-6 py-4 whitespace-nowrap min-w-[150px]">
-                      <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <span class="text-sm font-bold text-white">{{ String(celular.codigoInterno).substring(0, 2).toUpperCase() }}</span>
-                        </div>
-                        <div class="ml-3">
-                          <div class="text-sm font-semibold text-gray-900">{{ celular.codigoInterno }}</div>
-                        </div>
-                      </div>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[100px]">
+                      <div class="text-sm font-medium text-gray-900">{{ celular.codigoInterno }}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap min-w-[120px]">
-                      <div class="text-sm font-medium text-gray-900">{{ celular.marca }}</div>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[80px]">
+                      <div class="text-xs text-gray-600">{{ celular.codigoDeAplicacion || '-' }}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap min-w-[120px]">
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[80px]">
+                      <div class="text-sm text-gray-700">{{ celular.marca }}</div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[80px]">
                       <div class="text-sm text-gray-700">{{ celular.modelo }}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap min-w-[120px]">
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[60px] text-center">
+                      <span v-if="celular.tieneTemplado" class="text-green-600 text-lg">✓</span>
+                      <span v-else class="text-gray-300 text-lg">✗</span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[60px] text-center">
+                      <span v-if="celular.tieneFunda" class="text-green-600 text-lg">✓</span>
+                      <span v-else class="text-gray-300 text-lg">✗</span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[60px] text-center">
                       <span :class="{
-                        'inline-flex px-3 py-1 text-xs font-medium rounded-full': true,
-                        'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg': celular.estado === 'NUEVO',
-                        'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg': celular.estado === 'REACONDICIONADO',
-                        'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-lg': celular.estado === 'ROTO'
+                        'inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold': true,
+                        'bg-red-100 text-red-700': celular.cantRoturas > 0,
+                        'bg-green-100 text-green-700': celular.cantRoturas === 0
                       }">
-                        {{ celular.estado }}
+                        {{ celular.cantRoturas || 0 }}
                       </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap min-w-[150px]">
-                      <span v-if="celular.usuario" class="text-sm font-medium text-gray-900">{{ celular.usuario.numReparto }}</span>
-                      <span v-else class="text-sm text-gray-400 italic">Sin asignar</span>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[80px]">
+                      <span :class="{
+                        'inline-flex px-2 py-1 text-xs font-medium rounded-full': true,
+                        'bg-green-100 text-green-800': celular.estado === 'NUEVO',
+                        'bg-yellow-100 text-yellow-800': celular.estado === 'REACONDICIONADO',
+                        'bg-red-100 text-red-800': celular.estado === 'ROTO'
+                      }">
+                        {{ celular.estado === 'REACONDICIONADO' ? 'REAC' : celular.estado }}
+                      </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap min-w-[140px]">
-                      <div class="flex items-center gap-2">
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[90px]">
+                      <span v-if="celular.usuario" class="text-sm text-gray-900">{{ celular.usuario.numReparto }}</span>
+                      <span v-else class="text-xs text-gray-400 italic">Sin asignar</span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap min-w-[100px] text-center">
+                      <div class="flex items-center justify-center gap-2">
                         <button @click="editarCelular(celular)" 
                                 class="p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 group" 
                                 title="Editar celular">
@@ -667,16 +687,17 @@ onMounted(() => {
             <!-- Vista móvil - Cards -->
             <div class="lg:hidden space-y-4">
               <div v-for="celular in celularesPaginados" 
-                   :key="celular.numeroSerie" 
+                   :key="celular.codigoInterno" 
                    class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300">
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span class="text-sm font-bold text-white">{{ String(celular.numeroSerie).substring(0, 2) }}</span>
+                      <span class="text-sm font-bold text-white">{{ String(celular.codigoInterno).substring(0, 2).toUpperCase() }}</span>
                     </div>
                     <div>
-                      <h3 class="font-bold text-gray-900 text-lg">{{ celular.numeroSerie }}</h3>
+                      <h3 class="font-bold text-gray-900 text-lg">{{ celular.codigoInterno }}</h3>
                       <p class="text-sm text-gray-600">{{ celular.marca }} {{ celular.modelo }}</p>
+                      <p v-if="celular.codigoDeAplicacion" class="text-xs text-gray-500 mt-1">App: {{ celular.codigoDeAplicacion }}</p>
                     </div>
                   </div>
                   <span :class="{
@@ -689,11 +710,54 @@ onMounted(() => {
                   </span>
                 </div>
                 
-                <div class="mb-6">
-                  <span class="text-xs font-semibold text-gray-500 uppercase">Usuario Asignado</span>
-                  <p class="text-sm font-medium text-gray-900 mt-1">
-                    {{ celular.usuario?.numReparto || 'Sin asignar' }}
-                  </p>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Usuario Asignado</span>
+                    <p class="text-sm font-medium text-gray-900 mt-1">
+                      {{ celular.usuario?.numReparto || 'Sin asignar' }}
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Roturas</span>
+                    <p class="text-sm font-medium text-gray-900 mt-1">
+                      <span :class="{
+                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium': true,
+                        'bg-red-100 text-red-800': celular.cantRoturas > 0,
+                        'bg-green-100 text-green-800': celular.cantRoturas === 0
+                      }">
+                        {{ celular.cantRoturas || 0 }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                  <div class="flex items-center gap-2">
+                    <span v-if="celular.tieneTemplado" class="inline-flex items-center justify-center w-5 h-5 bg-green-100 text-green-600 rounded-full">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                    </span>
+                    <span v-else class="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-400 rounded-full">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                      </svg>
+                    </span>
+                    <span class="text-xs font-medium text-gray-700">Templado</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span v-if="celular.tieneFunda" class="inline-flex items-center justify-center w-5 h-5 bg-green-100 text-green-600 rounded-full">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                    </span>
+                    <span v-else class="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-400 rounded-full">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                      </svg>
+                    </span>
+                    <span class="text-xs font-medium text-gray-700">Funda</span>
+                  </div>
                 </div>
                 
                 <div class="flex items-center gap-3 pt-4 border-t border-gray-200">
