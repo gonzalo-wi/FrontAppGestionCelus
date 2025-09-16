@@ -242,6 +242,7 @@ class ExcelService {
       'SUR': 'Sur',
       'OESTE': 'Oeste',
       'ESTE': 'Este'
+      
     };
     return regiones[region] || region;
   }

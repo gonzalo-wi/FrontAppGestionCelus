@@ -320,6 +320,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { obtenerEstadisticasMiRegion } from '@/services/usuarioService';
+import { authService } from '@/services/authService';
 import Pagination from './Pagination.vue';
 
 // Estado
@@ -361,6 +362,12 @@ const topCelularesRotosPaginados = computed(() => {
 
 // Métodos
 const cargarEstadisticas = async () => {
+  // Verificar autenticación antes de hacer la request
+  if (!authService.isAuthenticated()) {
+    console.log('Usuario no autenticado, cancelando carga de estadísticas');
+    return;
+  }
+  
   try {
     loading.value = true;
     console.log('Cargando estadísticas de mi región con período:', periodoActual.value);

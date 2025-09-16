@@ -1,5 +1,47 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50">
+    <!-- Pantalla de carga post-login -->
+    <div v-if="isLoading" class="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-blue-900/95 via-purple-900/95 to-cyan-900/95 backdrop-blur-xl">
+      <div class="text-center">
+        <!-- Spinner principal -->
+        <div class="relative mb-8">
+          <div class="w-24 h-24 border-4 border-white/20 rounded-full animate-spin">
+            <div class="absolute top-0 left-0 w-24 h-24 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+          </div>
+          <div class="absolute inset-0 w-24 h-24 border-4 border-transparent border-t-blue-400 rounded-full animate-ping opacity-30"></div>
+        </div>
+        
+        <!-- Texto con animación -->
+        <div class="text-white text-center">
+          <h3 class="text-2xl font-bold mb-2 animate-pulse">¡Bienvenido de vuelta!</h3>
+          <p class="text-blue-200 font-medium mb-6">Preparando tu área de trabajo...</p>
+          
+          <!-- Elementos que se están "cargando" -->
+          <div class="space-y-2 text-sm text-white/80">
+            <div class="flex items-center justify-center gap-2">
+              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Verificando permisos</span>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
+              <span>Cargando datos</span>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-500"></div>
+              <span>Configurando interfaz</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barra de progreso animada -->
+        <div class="mt-8 w-64 mx-auto">
+          <div class="h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 rounded-full animate-[loading_4s_ease-in-out_forwards]"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Pantalla de carga para logout -->
     <div v-if="isLoggingOut" class="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-blue-900/90 via-purple-900/90 to-cyan-900/90 backdrop-blur-xl">
       <div class="text-center">
@@ -28,7 +70,7 @@
     </div>
 
     <!-- Layout principal -->
-    <div v-if="isAuthenticated" class="min-h-screen">
+    <div v-if="isAuthenticated && !isLoading" class="min-h-screen">
       <!-- Container del sidebar con overlay -->
       <div v-if="sidebarOpen" class="fixed inset-0 z-[90]">
         <!-- Overlay de fondo -->
@@ -520,6 +562,17 @@ const router = useRouter();
 const mobileMenuOpen = ref(false);
 const sidebarOpen = ref(false);
 
+// Estados para la pantalla de logout
+const isLoggingOut = ref(false);
+const isLoading = ref(false); // Estado de carga post-login - iniciado en false
+const logoutMessage = ref('Cerrando sesión...');
+const logoutProgress = ref('w-0');
+
+// Usar los refs reactivos del authService - PRIMERO
+const currentUser = computed(() => authService.user.value);
+const isAuthenticated = computed(() => !!authService.authenticated.value);
+const isAdmin = computed(() => authService.isAdmin());
+
 // Función para toggle del sidebar
 const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value;
@@ -537,15 +590,23 @@ watch(() => router.currentRoute.value.path, () => {
   sidebarOpen.value = false;
 });
 
-// Estados para la pantalla de logout
-const isLoggingOut = ref(false);
-const logoutMessage = ref('Cerrando sesión...');
-const logoutProgress = ref('w-0');
+// Función para mostrar loading post-login con más tiempo
+const showPostLoginLoading = () => {
+  isLoading.value = true;
+  
+  // Simular carga de recursos con más tiempo
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 2000); // 4 segundos de loading para dar más tiempo
+};
 
-// Usar los refs reactivos del authService
-const currentUser = computed(() => authService.user.value);
-const isAuthenticated = computed(() => !!authService.authenticated.value);
-const isAdmin = computed(() => authService.isAdmin());
+// Watcher para detectar cambios en autenticación - DESPUÉS de declarar isAuthenticated
+watch(isAuthenticated, (newValue, oldValue) => {
+  // Solo mostrar loading si cambió de false a true (recién se logueó)
+  if (newValue && !oldValue) {
+    showPostLoginLoading();
+  }
+});
 
 // Método para manejar actualizaciones de alertas
 const onAlertaActualizada = () => {
@@ -557,47 +618,41 @@ const onAlertaActualizada = () => {
 const logout = async () => {
   console.log('🚪 Iniciando proceso de logout...');
   
+  // Limpiar sesión INMEDIATAMENTE para evitar requests sin autenticación
+  authService.logout();
+  console.log('✅ Sesión cerrada inmediatamente');
+  
   // Iniciar pantalla de carga
   isLoggingOut.value = true;
   logoutMessage.value = 'Cerrando sesión...';
   logoutProgress.value = 'w-1/4';
   
   try {
-    // Simular progreso paso a paso
-    setTimeout(() => {
-      logoutMessage.value = 'Guardando cambios...';
-      logoutProgress.value = 'w-1/2';
-    }, 500);
-    
+    // Simular progreso con menos tiempo
     setTimeout(() => {
       logoutMessage.value = 'Limpiando datos...';
-      logoutProgress.value = 'w-3/4';
-    }, 1000);
+      logoutProgress.value = 'w-1/2';
+    }, 300);
     
     setTimeout(() => {
       logoutMessage.value = 'Finalizando sesión...';
-      logoutProgress.value = 'w-full';
-    }, 1500);
+      logoutProgress.value = 'w-3/4';
+    }, 600);
     
-    // Realizar logout después de las animaciones
     setTimeout(() => {
-      authService.logout();
-      console.log('✅ Sesión cerrada, redirigiendo...');
-      
-      // Mensaje final antes de redireccionar
       logoutMessage.value = '¡Hasta luego! 👋';
-      
-      setTimeout(() => {
-        isLoggingOut.value = false;
-        router.push('/login');
-      }, 800);
-      
-    }, 2000);
+      logoutProgress.value = 'w-full';
+    }, 900);
+    
+    // Redireccionar rápidamente
+    setTimeout(() => {
+      isLoggingOut.value = false;
+      router.push('/login');
+    }, 1200);
     
   } catch (error) {
     console.error('Error durante logout:', error);
     // En caso de error, continuar con logout normal
-    authService.logout();
     isLoggingOut.value = false;
     router.push('/login');
   }
@@ -608,6 +663,8 @@ onMounted(() => {
   if (!authService.isAuthenticated() && router.currentRoute.value.path !== '/login') {
     router.push('/login');
   }
+  
+  // No activar loading automáticamente - solo cuando se detecte un nuevo login
   
   // Asegurar que el sidebar inicie cerrado
   sidebarOpen.value = false;
@@ -621,3 +678,31 @@ onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyPress);
 });
 </script>
+
+<style scoped>
+@keyframes loading {
+  0% {
+    width: 0%;
+  }
+  25% {
+    width: 30%;
+  }
+  50% {
+    width: 60%;
+  }
+  75% {
+    width: 85%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Transiciones suaves para el layout */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>

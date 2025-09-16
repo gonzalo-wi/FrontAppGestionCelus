@@ -10,7 +10,14 @@ export const Region = {
   ESTE: 'ESTE',
   OESTE: 'OESTE',
   LA_PLATA: 'LA_PLATA',
-  NAFA: 'NAFA'
+  NAFA: 'NAFA',
+  SISTEMAS: 'SISTEMAS',
+  LAVAZZA: 'LAVAZZA',
+  TALLER: 'TALLER',
+  IMPACTO: 'IMPACTO',
+  COMERCIAL: 'COMERCIAL',
+  GERENCIA: 'GERENCIA',
+  PLANTA: 'PLANTA'
 } as const;
 export type RegionType = typeof Region[keyof typeof Region];
 

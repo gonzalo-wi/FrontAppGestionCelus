@@ -1,0 +1,560 @@
+<template>
+  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+    <!-- Header del panel -->
+    <div class="b<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { notificacionService } from '@/services/notificacionService';
+
+// Estados reactivos
+const notificaciones = ref([]);
+const loading = ref(false);
+const ultimaActualizacion = ref('');
+
+// Sistema de polling inteligente
+let refreshInterval = null;
+let pollingInterval = 30000; // Inicial: 30 segundos
+const minPollingInterval = 10000; // Mínimo: 10 segundos
+const maxPollingInterval = 120000; // Máximo: 2 minutos
+let isTabVisible = true;
+let hasRecentActivity = true;
+
+// Cache para evitar requests innecesarios
+let lastNotificationHash = '';
+let lastFetchTime = 0;
+const cacheTimeout = 5000; // 5 segundos de cache mínimoto-r from-blue-500 to-purple-600 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-white/20 rounded-xl">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-3.5-3.5a.5.5 0 010-.707l.5-.5a.5.5 0 000-.707L15 10V9a6 6 0 10-12 0v1L1.5 11.5a.5.5 0 000 .707l.5.5a.5.5 0 010 .707L5 17h5m5 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-white">Notificaciones de Cambios</h3>
+            <p class="text-blue-100 text-sm">Cambios recientes de líneas telefónicas</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <span v-if="notificacionesNoLeidas > 0" 
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            {{ notificacionesNoLeidas }} nuevas
+          </span>
+          <button @click="marcarTodasComoLeidas" 
+                  v-if="notificacionesNoLeidas > 0"
+                  class="text-white/80 hover:text-white text-sm font-medium bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30 transition-all">
+            Marcar todas como leídas
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="max-h-96 overflow-y-auto">
+      <!-- Loading -->
+      <div v-if="loading" class="p-6 text-center">
+        <div class="inline-flex items-center text-gray-500">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Cargando notificaciones...
+        </div>
+      </div>
+
+      <!-- Sin notificaciones -->
+      <div v-else-if="notificaciones.length === 0" class="p-8 text-center">
+        <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h4 class="text-gray-500 font-medium">No hay notificaciones</h4>
+        <p class="text-gray-400 text-sm mt-1">Todas las notificaciones están al día</p>
+      </div>
+
+      <!-- Lista de notificaciones -->
+      <div v-else class="divide-y divide-gray-100">
+        <transition-group name="notification" tag="div">
+          <div v-for="notificacion in notificaciones" :key="notificacion.id" 
+               class="p-4 hover:bg-gray-50 transition-all duration-300 relative notification-item"
+               :class="{ 
+                 'bg-blue-50 border-l-4 border-l-blue-500 animate-pulse-once': !notificacion.leida,
+                 'opacity-75': notificacion.leida 
+               }">
+            
+            <!-- Indicador de no leída -->
+            <div v-if="!notificacion.leida" class="absolute left-2 top-6 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+            
+            <div class="ml-6">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <!-- Mensaje principal -->
+                  <p class="text-sm font-medium text-gray-900 mb-2"
+                     :class="{ 'font-bold': !notificacion.leida }">
+                    {{ notificacion.mensaje }}
+                  </p>
+                
+                <!-- Detalles importantes -->
+                <div class="bg-white rounded-lg p-3 border border-gray-200 mb-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span class="text-gray-600">Usuario modificado:</span>
+                      <span class="font-semibold text-gray-900">{{ notificacion.usuarioModificado }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span class="text-gray-600">Nueva línea:</span>
+                      <span class="font-semibold text-blue-600">{{ formatearTelefono(notificacion.numeroLinea) }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      <span class="text-gray-600">Modificado por:</span>
+                      <span class="font-semibold text-purple-600">{{ notificacion.usuarioQueModifico }}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Fecha y hora -->
+                <p class="text-xs text-gray-500">
+                  {{ formatearFechaCompleta(notificacion.fecha) }}
+                </p>
+              </div>
+              
+              <!-- Acciones -->
+              <div class="flex items-center gap-1 ml-4">
+                <button v-if="!notificacion.leida"
+                        @click="marcarComoLeida(notificacion.id)"
+                        class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors"
+                        title="Marcar como leída">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </button>
+                <button @click="eliminarNotificacion(notificacion.id)"
+                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        title="Eliminar notificación">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </transition-group>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-gray-200 px-6 py-3 bg-gray-50">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Última actualización: {{ ultimaActualizacion }}
+        </div>
+        <button @click="refrescar" 
+                class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { notificacionService } from '@/services/notificacionService';
+
+// Estado reactivo
+const notificaciones = ref([]);
+const loading = ref(false);
+const ultimaActualizacion = ref('');
+
+// Auto-refresh interval
+let refreshInterval = null;
+
+// Computed
+const notificacionesNoLeidas = computed(() => {
+  if (!Array.isArray(notificaciones.value)) {
+    return 0;
+  }
+  return notificaciones.value.filter(n => !n.leida).length;
+});
+
+// Métodos
+const generateNotificationHash = (notifications) => {
+  return JSON.stringify(notifications.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha })));
+};
+
+const cargarNotificaciones = async (forceRefresh = false) => {
+  const now = Date.now();
+  
+  // Evitar requests muy frecuentes usando cache
+  if (!forceRefresh && (now - lastFetchTime) < cacheTimeout) {
+    return;
+  }
+  
+  try {
+    loading.value = true;
+    const response = await notificacionService.obtenerTodas();
+    
+    let nuevasNotificaciones = [];
+    
+    // Verificar si la respuesta es HTML (error 404 o endpoint no configurado)
+    if (response && response.data && typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+      console.warn('El endpoint /api/notificaciones devuelve HTML, usando datos mock');
+      nuevasNotificaciones = [
+        {
+          "id": 1,
+          "mensaje": "Cambio de línea por norte en usuario 1",
+          "fecha": "2025-09-16T14:37:33",
+          "leida": false,
+          "usuarioQueModifico": "norte",
+          "usuarioModificado": "1",
+          "numeroLinea": "1164449098"
+        }
+      ];
+    } else if (response && response.data && Array.isArray(response.data)) {
+      nuevasNotificaciones = response.data;
+    } else if (response && Array.isArray(response)) {
+      nuevasNotificaciones = response;
+    } else {
+      nuevasNotificaciones = [];
+      console.warn('La respuesta del API no es un array válido:', response);
+    }
+    
+    // Verificar si las notificaciones han cambiado
+    const newHash = generateNotificationHash(nuevasNotificaciones);
+    const hasChanges = newHash !== lastNotificationHash;
+    
+    if (hasChanges) {
+      // Detectar nuevas notificaciones para mostrar animación
+      const oldIds = new Set(notificaciones.value.map(n => n.id));
+      const newNotifications = nuevasNotificaciones.filter(n => !oldIds.has(n.id));
+      
+      notificaciones.value = nuevasNotificaciones;
+      lastNotificationHash = newHash;
+      
+      // Mostrar notificación del navegador para nuevas notificaciones
+      if (newNotifications.length > 0 && !isTabVisible) {
+        mostrarNotificacionNavegador(newNotifications);
+      }
+      
+      // Reducir intervalo si hay actividad
+      if (newNotifications.length > 0) {
+        ajustarPollingInterval(true);
+      } else {
+        ajustarPollingInterval(false);
+      }
+    }
+    
+    lastFetchTime = now;
+    ultimaActualizacion.value = new Date().toLocaleTimeString('es-ES');
+  } catch (error) {
+    console.error('Error al cargar notificaciones:', error);
+    // En caso de error, mantener notificaciones actuales y aumentar intervalo
+    ajustarPollingInterval(false);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const ajustarPollingInterval = (hayActividad) => {
+  if (hayActividad) {
+    // Reducir intervalo cuando hay actividad
+    pollingInterval = Math.max(minPollingInterval, pollingInterval * 0.8);
+  } else {
+    // Aumentar intervalo gradualmente cuando no hay actividad
+    pollingInterval = Math.min(maxPollingInterval, pollingInterval * 1.2);
+  }
+  
+  // Si la pestaña no está visible, usar intervalo más largo
+  if (!isTabVisible) {
+    pollingInterval = Math.min(maxPollingInterval, pollingInterval * 2);
+  }
+  
+  // Reiniciar el polling con el nuevo intervalo
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    iniciarPolling();
+  }
+};
+
+const mostrarNotificacionNavegador = (nuevasNotificaciones) => {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    nuevasNotificaciones.forEach(notif => {
+      new Notification('Nueva notificación - CellControl', {
+        body: notif.mensaje,
+        icon: '/src/assets/LogoCellControl.png',
+        badge: '/src/assets/LogoCellControl.png',
+        tag: `notificacion-${notif.id}`,
+        requireInteraction: false,
+        silent: false
+      });
+    });
+  }
+};
+
+const solicitarPermisoNotificaciones = async () => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+  return Notification.permission === 'granted';
+};
+
+// Detectar visibilidad de la pestaña
+const handleVisibilityChange = () => {
+  isTabVisible = !document.hidden;
+  if (isTabVisible) {
+    hasRecentActivity = true;
+    // Cuando vuelve a estar visible, hacer un refresh inmediato
+    cargarNotificaciones(true);
+  }
+  ajustarPollingInterval(isTabVisible);
+};
+
+// Detectar actividad del usuario
+const handleUserActivity = () => {
+  hasRecentActivity = true;
+  // Resetear el intervalo a uno más frecuente cuando hay actividad
+  if (pollingInterval > minPollingInterval * 1.5) {
+    ajustarPollingInterval(true);
+  }
+};
+
+const iniciarPolling = () => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+  
+  refreshInterval = setInterval(() => {
+    if (isTabVisible || hasRecentActivity) {
+      cargarNotificaciones();
+      hasRecentActivity = false;
+    }
+  }, pollingInterval);
+};
+
+const marcarComoLeida = async (notificacionId) => {
+  try {
+    await notificacionService.marcarComoLeida(notificacionId);
+    if (Array.isArray(notificaciones.value)) {
+      const notificacion = notificaciones.value.find(n => n.id === notificacionId);
+      if (notificacion) {
+        // Agregar una pequeña animación antes de marcar como leída
+        notificacion.leida = true;
+        // Actualizar el hash para reflejar el cambio
+        lastNotificationHash = generateNotificationHash(notificaciones.value);
+      }
+    }
+  } catch (error) {
+    console.error('Error al marcar notificación como leída:', error);
+  }
+};
+
+const marcarTodasComoLeidas = async () => {
+  try {
+    await notificacionService.marcarTodasComoLeidas();
+    if (Array.isArray(notificaciones.value)) {
+      notificaciones.value.forEach(notificacion => {
+        notificacion.leida = true;
+      });
+    }
+  } catch (error) {
+    console.error('Error al marcar todas las notificaciones como leídas:', error);
+  }
+};
+
+const eliminarNotificacion = async (notificacionId) => {
+  if (!confirm('¿Estás seguro de que quieres eliminar esta notificación?')) {
+    return;
+  }
+  
+  try {
+    await notificacionService.eliminar(notificacionId);
+    notificaciones.value = notificaciones.value.filter(n => n.id !== notificacionId);
+  } catch (error) {
+    console.error('Error al eliminar notificación:', error);
+  }
+};
+
+const refrescar = () => {
+  cargarNotificaciones(true); // Forzar refresh
+  ajustarPollingInterval(true); // Reducir intervalo temporalmente
+};
+
+// Formatters
+const formatearTelefono = (telefono) => {
+  if (!telefono) return '';
+  // Formatear como (11) 6444-9098
+  const clean = telefono.replace(/\D/g, '');
+  if (clean.length === 10) {
+    return `(${clean.slice(0, 2)}) ${clean.slice(2, 6)}-${clean.slice(6)}`;
+  }
+  return telefono;
+};
+
+const formatearFechaCompleta = (fecha) => {
+  return new Date(fecha).toLocaleString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+// Lifecycle
+onMounted(async () => {
+  // Solicitar permisos de notificación
+  await solicitarPermisoNotificaciones();
+  
+  // Cargar notificaciones inicialmente
+  await cargarNotificaciones(true);
+  
+  // Configurar event listeners
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  document.addEventListener('click', handleUserActivity);
+  document.addEventListener('keydown', handleUserActivity);
+  document.addEventListener('scroll', handleUserActivity);
+  
+  // Iniciar polling inteligente
+  iniciarPolling();
+});
+
+onUnmounted(() => {
+  // Limpiar intervalos
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+  
+  // Limpiar event listeners
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  document.removeEventListener('click', handleUserActivity);
+  document.removeEventListener('keydown', handleUserActivity);
+  document.removeEventListener('scroll', handleUserActivity);
+});
+</script>
+
+<style scoped>
+/* Animaciones para las notificaciones */
+@keyframes pulse-once {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.8; 
+    background-color: rgb(219 234 254 / 0.8);
+  }
+}
+
+.animate-pulse-once {
+  animation: pulse-once 2s ease-in-out;
+}
+
+/* Transiciones para nuevas notificaciones */
+.notification-enter-active {
+  transition: all 0.6s ease-out;
+}
+
+.notification-leave-active {
+  transition: all 0.4s ease-in;
+}
+
+.notification-enter-from {
+  opacity: 0;
+  transform: translateX(-20px) scale(0.95);
+  background-color: rgb(34 197 94 / 0.1);
+}
+
+.notification-enter-to {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.notification-leave-from {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.notification-leave-to {
+  opacity: 0;
+  transform: translateX(20px) scale(0.95);
+}
+
+.notification-move {
+  transition: transform 0.4s ease;
+}
+
+/* Mejora visual para notificaciones no leídas */
+.notification-item:not(.opacity-75):hover {
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Animación del indicador de carga */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Mejorar la animación del ping */
+.animate-ping {
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Estados hover mejorados */
+.notification-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scroll suave en la lista de notificaciones */
+.max-h-96 {
+  scroll-behavior: smooth;
+}
+
+/* Efecto de destaque para notificaciones importantes */
+.notification-item.bg-blue-50 {
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-item.bg-blue-50::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(59, 130, 246, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.notification-item.bg-blue-50:hover::before {
+  left: 100%;
+}
+</style>

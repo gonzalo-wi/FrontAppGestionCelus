@@ -26,7 +26,7 @@ const itemsPerPage = ref(25);
 
 // Opciones para enums
 const regiones = [
-  'NORTE', 'SUR', 'ESTE', 'OESTE', 'NAFA', 'LA_PLATA'
+  'NORTE', 'SUR', 'ESTE', 'OESTE', 'NAFA', 'LA_PLATA', 'LAVAZZA', 'IMPACTO', 'PLANTA', 'SISTEMAS', 'TALLER', 'GERENCIA', 'COMERCIAL'
 ];
 const zonas = [
   'CIUDADELA', 'LOMAS_DE_ZAMORA', 'LA_PLATA'

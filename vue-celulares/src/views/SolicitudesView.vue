@@ -86,6 +86,13 @@
               <option value="OESTE">OESTE</option>
               <option value="LA_PLATA">LA PLATA</option>
               <option value="NAFA">NAFA</option>
+              <option value="LAVAZZA">LAVAZZA</option>
+              <option value="TALLER">TALLER</option>
+              <option value="IMPACTO">IMPACTO</option>
+              <option value="COMERCIAL">COMERCIAL</option>
+              <option value="GERENCIA">GERENCIA</option>
+              <option value="PLANTA">PLANTA</option>
+              <option value="SISTEMAS">SISTEMAS</option>
             </select>
           </div>
           <div class="space-y-2">
@@ -158,6 +165,13 @@
               <option value="OESTE">OESTE</option>
               <option value="LA_PLATA">LA PLATA</option>
               <option value="NAFA">NAFA</option>
+              <option value="LAVAZZA">LAVAZZA</option>
+              <option value="TALLER">TALLER</option>
+              <option value="IMPACTO">IMPACTO</option>
+              <option value="COMERCIAL">COMERCIAL</option>
+              <option value="GERENCIA">GERENCIA</option>
+              <option value="PLANTA">PLANTA</option>
+              <option value="SISTEMAS">SISTEMAS</option>
             </select>
           </div>
           <div class="space-y-2">

@@ -17,28 +17,102 @@
           />
         </div>
         
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Número de Serie</label>
-          <select v-model="form.numeroSerie" required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-            <option value="" disabled>Seleccione un celular</option>
-            <option v-for="celular in celulares" :key="celular.numeroSerie" :value="celular.numeroSerie">
-              {{ celular.numeroSerie }} - {{ celular.marca }} {{ celular.modelo }}
-            </option>
-          </select>
+        <!-- Campo predictivo para celular por código interno -->
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Código Interno del Celular</label>
+          <input 
+            v-model="celularSearch"
+            @input="onCelularSearch"
+            @focus="showCelularSuggestions = true"
+            @blur="hideCelularSuggestions"
+            type="text" 
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            placeholder="Escribe el código interno..."
+            autocomplete="off"
+          />
+          
+          <!-- Lista de sugerencias para celular -->
+          <div v-if="showCelularSuggestions && filteredCelulares.length > 0" 
+               class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div 
+              v-for="celular in filteredCelulares" 
+              :key="celular.numeroSerie"
+              @mousedown="selectCelular(celular)"
+              class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-900">{{ celular.codigoInterno }}</p>
+                  <p class="text-sm text-gray-600">{{ celular.marca }} {{ celular.modelo }}</p>
+                </div>
+                <div class="text-right">
+                  <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                        :class="{
+                          'bg-green-100 text-green-800': celular.estado === 'DISPONIBLE',
+                          'bg-blue-100 text-blue-800': celular.estado === 'ENTREGADO',
+                          'bg-red-100 text-red-800': celular.estado === 'ROTO'
+                        }">
+                    {{ celular.estado }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Celular seleccionado -->
+          <div v-if="selectedCelular" class="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <p class="text-sm font-medium text-green-800">
+              {{ selectedCelular.codigoInterno }} - {{ selectedCelular.marca }} {{ selectedCelular.modelo }}
+            </p>
+            <p class="text-xs text-green-600">Serie: {{ selectedCelular.numeroSerie }}</p>
+          </div>
         </div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        <!-- Campo predictivo para usuario -->
+        <div class="relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
-          <select v-model="form.numReparto" required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-            <option value="" disabled>Seleccione un usuario</option>
-            <option v-for="usuario in usuarios" :key="usuario.numReparto" :value="usuario.numReparto">
-              {{ usuario.numReparto }} - {{ usuario.region }}
-            </option>
-          </select>
+          <input 
+            v-model="usuarioSearch"
+            @input="onUsuarioSearch"
+            @focus="showUsuarioSuggestions = true"
+            @blur="hideUsuarioSuggestions"
+            type="text" 
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            placeholder="Escribe el número de reparto o región..."
+            autocomplete="off"
+          />
+          
+          <!-- Lista de sugerencias para usuario -->
+          <div v-if="showUsuarioSuggestions && filteredUsuarios.length > 0" 
+               class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div 
+              v-for="usuario in filteredUsuarios" 
+              :key="usuario.numReparto"
+              @mousedown="selectUsuario(usuario)"
+              class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-900">{{ usuario.numReparto }}</p>
+                  <p class="text-sm text-gray-600">{{ usuario.region }}</p>
+                </div>
+                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                  {{ usuario.estado || 'ACTIVO' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Usuario seleccionado -->
+          <div v-if="selectedUsuario" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-sm font-medium text-blue-800">
+              {{ selectedUsuario.numReparto }} - {{ selectedUsuario.region }}
+            </p>
+          </div>
         </div>
         
         <div>
@@ -54,7 +128,7 @@
       </div>
 
       <div class="flex justify-end pt-4 border-t border-gray-200">
-        <button type="submit" :disabled="loading"
+        <button type="submit" :disabled="loading || !selectedCelular || !selectedUsuario"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50">
           <svg v-if="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -70,7 +144,7 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { reactive, ref, computed } from 'vue';
 
 const props = defineProps({
   celulares: { type: Array, default: () => [] },
@@ -82,27 +156,119 @@ const emit = defineEmits(['save']);
 
 const form = reactive({
   fecha: new Date().toISOString().split('T')[0],
-  numeroSerie: '',
-  numReparto: '',
   descripcion: ''
 });
 
+// Estados para el campo predictivo de celular
+const celularSearch = ref('');
+const selectedCelular = ref(null);
+const showCelularSuggestions = ref(false);
+
+// Estados para el campo predictivo de usuario
+const usuarioSearch = ref('');
+const selectedUsuario = ref(null);
+const showUsuarioSuggestions = ref(false);
+
+// Computed para filtrar celulares
+const filteredCelulares = computed(() => {
+  if (!celularSearch.value || celularSearch.value.length < 1) {
+    return props.celulares.slice(0, 10); // Mostrar los primeros 10 si no hay búsqueda
+  }
+  
+  const searchTerm = celularSearch.value.toLowerCase();
+  return props.celulares.filter(celular => {
+    return (
+      celular.codigoInterno?.toLowerCase().includes(searchTerm) ||
+      celular.numeroSerie?.toString().includes(searchTerm) ||
+      celular.marca?.toLowerCase().includes(searchTerm) ||
+      celular.modelo?.toLowerCase().includes(searchTerm)
+    );
+  }).slice(0, 10); // Limitar a 10 resultados
+});
+
+// Computed para filtrar usuarios
+const filteredUsuarios = computed(() => {
+  if (!usuarioSearch.value || usuarioSearch.value.length < 1) {
+    return props.usuarios.slice(0, 10); // Mostrar los primeros 10 si no hay búsqueda
+  }
+  
+  const searchTerm = usuarioSearch.value.toLowerCase();
+  return props.usuarios.filter(usuario => {
+    return (
+      usuario.numReparto?.toLowerCase().includes(searchTerm) ||
+      usuario.region?.toLowerCase().includes(searchTerm) ||
+      usuario.nombre?.toLowerCase().includes(searchTerm)
+    );
+  }).slice(0, 10); // Limitar a 10 resultados
+});
+
+// Métodos para manejo de celular
+const onCelularSearch = () => {
+  selectedCelular.value = null;
+  showCelularSuggestions.value = true;
+};
+
+const selectCelular = (celular) => {
+  selectedCelular.value = celular;
+  celularSearch.value = celular.codigoInterno;
+  showCelularSuggestions.value = false;
+};
+
+const hideCelularSuggestions = () => {
+  setTimeout(() => {
+    showCelularSuggestions.value = false;
+  }, 150); // Delay para permitir el click en las sugerencias
+};
+
+// Métodos para manejo de usuario
+const onUsuarioSearch = () => {
+  selectedUsuario.value = null;
+  showUsuarioSuggestions.value = true;
+};
+
+const selectUsuario = (usuario) => {
+  selectedUsuario.value = usuario;
+  usuarioSearch.value = `${usuario.numReparto} - ${usuario.region}`;
+  showUsuarioSuggestions.value = false;
+};
+
+const hideUsuarioSuggestions = () => {
+  setTimeout(() => {
+    showUsuarioSuggestions.value = false;
+  }, 150); // Delay para permitir el click en las sugerencias
+};
+
 const resetForm = () => {
   form.fecha = new Date().toISOString().split('T')[0];
-  form.numeroSerie = '';
-  form.numReparto = '';
   form.descripcion = '';
+  
+  // Reset campos predictivos
+  celularSearch.value = '';
+  selectedCelular.value = null;
+  showCelularSuggestions.value = false;
+  
+  usuarioSearch.value = '';
+  selectedUsuario.value = null;
+  showUsuarioSuggestions.value = false;
 };
 
 const guardar = () => {
+  if (!selectedCelular.value || !selectedUsuario.value) {
+    alert('Por favor selecciona un celular y un usuario');
+    return;
+  }
+  
   const movimiento = {
     fecha: form.fecha,
-    celular: { numeroSerie: parseInt(form.numeroSerie) },
-    usuario: { numReparto: form.numReparto },
+    celular: { numeroSerie: selectedCelular.value.numeroSerie },
+    usuario: { numReparto: selectedUsuario.value.numReparto },
     descripcion: form.descripcion
   };
   
   emit('save', movimiento);
   resetForm();
 };
+
+// Exponer método para reset desde el componente padre
+defineExpose({ resetForm });
 </script>

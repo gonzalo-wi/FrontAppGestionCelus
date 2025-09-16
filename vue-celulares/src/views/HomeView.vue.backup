@@ -1,6 +1,9 @@
 
 <template>
   <div class="relative overflow-hidden">
+    <!-- Da        <!-- Dashboard Grid -->
+<template>
+  <div class="relative overflow-hidden">
     <!-- Dashboard para usuarios normales -->
     <div v-if="!isAdmin" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <DashboardUsuario />
@@ -62,12 +65,16 @@
           </div>
         </div>
 
-        <!-- Dashboard Content - Centrado -->
+        <!-- Dashboard Grid -->
         <div class="flex justify-center">
-          <div class="max-w-4xl w-full space-y-6">
+          <div class="max-w-5xl w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+              
+              <!-- Panel de Alertas -->
+              <div class="lg:col-span-2 space-y-6">
             <!-- Resumen Ejecutivo -->
             <div class="bg-gradient-to-br from-blue-50 to-indigo-100 backdrop-blur-xl rounded-2xl p-6 border border-blue-200 shadow-lg">
-              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
@@ -95,7 +102,7 @@
 
             <!-- Alertas del Sistema -->
             <div class="bg-gradient-to-br from-orange-50 to-red-100 backdrop-blur-xl rounded-2xl p-6 border border-orange-200 shadow-lg">
-              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                 </svg>
@@ -123,11 +130,8 @@
               </div>
             </div>
 
-            <!-- Panel de Notificaciones centrado -->
-            <div class="flex justify-center">
-              <div class="w-full max-w-3xl">
-                <NotificacionesPanel />
-              </div>
+            <!-- Panel de Notificaciones -->
+            <NotificacionesPanel />
             </div>
           </div>
         </div>
@@ -217,13 +221,6 @@ const currentUser = computed(() => authService.getCurrentUser());
 const isAdmin = computed(() => authService.isAdmin());
 
 const cargarEstadisticas = async () => {
-  // Verificar autenticación antes de hacer requests
-  if (!authService.isAuthenticated()) {
-    console.log('Usuario no autenticado, cancelando carga de estadísticas');
-    stats.value.loading = false;
-    return;
-  }
-  
   stats.value.loading = true;
   try {
     // Cargar datos básicos disponibles para todos los usuarios

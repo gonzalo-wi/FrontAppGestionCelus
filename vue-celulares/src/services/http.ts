@@ -24,7 +24,7 @@ http.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor de respuesta: loguea 401/403 para debug
+// Interceptor de respuesta: maneja errores de autenticación
 http.interceptors.response.use(
   (res) => res,
   async (err) => {
@@ -33,10 +33,15 @@ http.interceptors.response.use(
       console.warn('Auth error', status, '->', err.config?.url);
       // 401 = no autenticado: limpiar sesión y enviar a login
       const currentPath = router.currentRoute.value.fullPath;
-      authService.logout();
+      
+      // Solo hacer logout y redireccionar si no estamos ya en login
       if (router.currentRoute.value.name !== 'Login') {
+        authService.logout();
         await router.replace({ name: 'Login', query: { redirect: currentPath } }).catch(() => {});
       }
+      
+      // Rechazar el error sin mostrar alertas adicionales
+      return Promise.reject(new Error('Usuario no autenticado'));
     } else if (status === 403) {
       // 403 = autenticado pero sin permisos. No cerramos sesión.
       console.warn('Forbidden (403) ->', err.config?.url);

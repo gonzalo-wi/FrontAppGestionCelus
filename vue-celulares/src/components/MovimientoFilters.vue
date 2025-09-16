@@ -36,34 +36,111 @@
         />
       </div>
 
-      <!-- Filtro por usuario -->
-      <div>
+      <!-- Filtro por usuario con predictivo -->
+      <div class="relative">
         <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
-        <select 
-          v-model="filtros.usuario"
+        <input 
+          v-model="usuarioSearch"
+          @input="onUsuarioFilterSearch"
+          @focus="showUsuarioFilterSuggestions = true"
+          @blur="hideUsuarioFilterSuggestions"
+          type="text"
+          placeholder="Buscar usuario..."
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-          @change="aplicarFiltros"
-        >
-          <option value="">Todos los usuarios</option>
-          <option v-for="usuario in usuarios" :key="usuario.numReparto" :value="usuario.numReparto">
-            {{ usuario.numReparto }} - {{ usuario.region }}
-          </option>
-        </select>
+          autocomplete="off"
+        />
+        
+        <!-- Lista de sugerencias para usuario -->
+        <div v-if="showUsuarioFilterSuggestions && filteredUsuariosFilter.length > 0" 
+             class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          <div 
+            v-for="usuario in filteredUsuariosFilter" 
+            :key="usuario.numReparto"
+            @mousedown="selectUsuarioFilter(usuario)"
+            class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">{{ usuario.numReparto }}</p>
+                <p class="text-sm text-gray-600">{{ usuario.region }}</p>
+              </div>
+              <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                {{ usuario.region }}
+              </span>
+            </div>
+          </div>
+          <!-- Opción para limpiar filtro -->
+          <div 
+            @mousedown="clearUsuarioFilter"
+            class="px-3 py-2 hover:bg-red-50 cursor-pointer border-t border-gray-200 text-center text-sm text-red-600 font-medium"
+          >
+            🗑️ Limpiar filtro de usuario
+          </div>
+        </div>
+        
+        <!-- Usuario seleccionado -->
+        <div v-if="selectedUsuarioFilter" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm font-medium text-blue-800">
+            {{ selectedUsuarioFilter.numReparto }} - {{ selectedUsuarioFilter.region }}
+          </p>
+        </div>
       </div>
 
-      <!-- Filtro por celular -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Celular (Serie)</label>
-        <select 
-          v-model="filtros.celular"
+      <!-- Filtro por celular con predictivo -->
+      <div class="relative">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Celular</label>
+        <input 
+          v-model="celularSearch"
+          @input="onCelularFilterSearch"
+          @focus="showCelularFilterSuggestions = true"
+          @blur="hideCelularFilterSuggestions"
+          type="text"
+          placeholder="Código interno o serie..."
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-          @change="aplicarFiltros"
-        >
-          <option value="">Todos los celulares</option>
-          <option v-for="celular in celulares" :key="celular.numeroSerie" :value="celular.numeroSerie">
-            Serie: {{ celular.numeroSerie }} - {{ celular.marca }} {{ celular.modelo }}
-          </option>
-        </select>
+          autocomplete="off"
+        />
+        
+        <!-- Lista de sugerencias para celular -->
+        <div v-if="showCelularFilterSuggestions && filteredCelularesFilter.length > 0" 
+             class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          <div 
+            v-for="celular in filteredCelularesFilter" 
+            :key="celular.numeroSerie"
+            @mousedown="selectCelularFilter(celular)"
+            class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">{{ celular.codigoInterno }}</p>
+                <p class="text-sm text-gray-600">{{ celular.marca }} {{ celular.modelo }}</p>
+                <p class="text-xs text-gray-500">Serie: {{ celular.numeroSerie }}</p>
+              </div>
+              <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                    :class="{
+                      'bg-green-100 text-green-800': celular.estado === 'DISPONIBLE',
+                      'bg-blue-100 text-blue-800': celular.estado === 'ENTREGADO',
+                      'bg-red-100 text-red-800': celular.estado === 'ROTO'
+                    }">
+                {{ celular.estado }}
+              </span>
+            </div>
+          </div>
+          <!-- Opción para limpiar filtro -->
+          <div 
+            @mousedown="clearCelularFilter"
+            class="px-3 py-2 hover:bg-red-50 cursor-pointer border-t border-gray-200 text-center text-sm text-red-600 font-medium"
+          >
+            🗑️ Limpiar filtro de celular
+          </div>
+        </div>
+        
+        <!-- Celular seleccionado -->
+        <div v-if="selectedCelularFilter" class="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+          <p class="text-sm font-medium text-green-800">
+            {{ selectedCelularFilter.codigoInterno }} - {{ selectedCelularFilter.marca }} {{ selectedCelularFilter.modelo }}
+          </p>
+          <p class="text-xs text-green-600">Serie: {{ selectedCelularFilter.numeroSerie }}</p>
+        </div>
       </div>
     </div>
 
@@ -177,6 +254,109 @@ const filtros = ref({
   ordenar: 'fecha_desc'
 });
 
+// Estados para campos predictivos de usuario
+const usuarioSearch = ref('');
+const selectedUsuarioFilter = ref(null);
+const showUsuarioFilterSuggestions = ref(false);
+
+// Estados para campos predictivos de celular
+const celularSearch = ref('');
+const selectedCelularFilter = ref(null);
+const showCelularFilterSuggestions = ref(false);
+
+// Computed para filtrar usuarios en el filtro
+const filteredUsuariosFilter = computed(() => {
+  if (!usuarioSearch.value || usuarioSearch.value.length < 1) {
+    return props.usuarios.slice(0, 8); // Mostrar menos resultados en filtros
+  }
+  
+  const searchTerm = usuarioSearch.value.toLowerCase();
+  return props.usuarios.filter(usuario => {
+    return (
+      usuario.numReparto?.toLowerCase().includes(searchTerm) ||
+      usuario.region?.toLowerCase().includes(searchTerm) ||
+      usuario.nombre?.toLowerCase().includes(searchTerm)
+    );
+  }).slice(0, 8);
+});
+
+// Computed para filtrar celulares en el filtro
+const filteredCelularesFilter = computed(() => {
+  if (!celularSearch.value || celularSearch.value.length < 1) {
+    return props.celulares.slice(0, 8); // Mostrar menos resultados en filtros
+  }
+  
+  const searchTerm = celularSearch.value.toLowerCase();
+  return props.celulares.filter(celular => {
+    return (
+      celular.codigoInterno?.toLowerCase().includes(searchTerm) ||
+      celular.numeroSerie?.toString().includes(searchTerm) ||
+      celular.marca?.toLowerCase().includes(searchTerm) ||
+      celular.modelo?.toLowerCase().includes(searchTerm)
+    );
+  }).slice(0, 8);
+});
+
+// Métodos para manejo de usuario en filtros
+const onUsuarioFilterSearch = () => {
+  selectedUsuarioFilter.value = null;
+  filtros.value.usuario = '';
+  showUsuarioFilterSuggestions.value = true;
+  aplicarFiltros();
+};
+
+const selectUsuarioFilter = (usuario) => {
+  selectedUsuarioFilter.value = usuario;
+  usuarioSearch.value = `${usuario.numReparto} - ${usuario.region}`;
+  filtros.value.usuario = usuario.numReparto;
+  showUsuarioFilterSuggestions.value = false;
+  aplicarFiltros();
+};
+
+const clearUsuarioFilter = () => {
+  selectedUsuarioFilter.value = null;
+  usuarioSearch.value = '';
+  filtros.value.usuario = '';
+  showUsuarioFilterSuggestions.value = false;
+  aplicarFiltros();
+};
+
+const hideUsuarioFilterSuggestions = () => {
+  setTimeout(() => {
+    showUsuarioFilterSuggestions.value = false;
+  }, 150);
+};
+
+// Métodos para manejo de celular en filtros
+const onCelularFilterSearch = () => {
+  selectedCelularFilter.value = null;
+  filtros.value.celular = '';
+  showCelularFilterSuggestions.value = true;
+  aplicarFiltros();
+};
+
+const selectCelularFilter = (celular) => {
+  selectedCelularFilter.value = celular;
+  celularSearch.value = celular.codigoInterno;
+  filtros.value.celular = celular.numeroSerie;
+  showCelularFilterSuggestions.value = false;
+  aplicarFiltros();
+};
+
+const clearCelularFilter = () => {
+  selectedCelularFilter.value = null;
+  celularSearch.value = '';
+  filtros.value.celular = '';
+  showCelularFilterSuggestions.value = false;
+  aplicarFiltros();
+};
+
+const hideCelularFilterSuggestions = () => {
+  setTimeout(() => {
+    showCelularFilterSuggestions.value = false;
+  }, 150);
+};
+
 const tieneFiltrosActivos = computed(() => {
   return filtros.value.fechaDesde || 
          filtros.value.fechaHasta || 
@@ -200,6 +380,16 @@ const limpiarFiltros = () => {
     region: '',
     ordenar: 'fecha_desc'
   };
+  
+  // Limpiar campos predictivos
+  usuarioSearch.value = '';
+  selectedUsuarioFilter.value = null;
+  showUsuarioFilterSuggestions.value = false;
+  
+  celularSearch.value = '';
+  selectedCelularFilter.value = null;
+  showCelularFilterSuggestions.value = false;
+  
   aplicarFiltros();
 };
 </script>
