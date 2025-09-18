@@ -1,6 +1,6 @@
 # Dockerfile multi-stage para aplicación Vue.js
 # Etapa 1: Build de la aplicación
-FROM node:18-alpine AS build-stage
+FROM node:20-alpine AS build-stage
 
 # Establecer directorio de trabajo
 WORKDIR /app
