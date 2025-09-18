@@ -1,11 +1,11 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+    <div class="mb-6 lg:mb-8">
+      <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
         📊 Estadísticas y Análisis
       </h1>
-      <p class="text-gray-600 mt-2">Panel de control y análisis regional de solicitudes</p>
+      <p class="text-gray-600 mt-2 text-sm sm:text-base">Panel de control y análisis regional de solicitudes</p>
     </div>
 
       <!-- Selector de región -->

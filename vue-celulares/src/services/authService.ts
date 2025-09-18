@@ -10,62 +10,139 @@ export interface User {
 // Estado reactivo para la autenticación
 const currentUser = ref<User | null>(null);
 const authToken = ref<string | null>(null);
+const isInitializing = ref<boolean>(true); // Nuevo estado para manejar la carga inicial
 
 class AuthService {
   constructor() {
-    this.checkExistingSession();
+    // Llamar la verificación asíncrona sin bloquear
+    this.initializeAuth();
   }
 
-  private checkExistingSession(): void {
+  private async initializeAuth(): Promise<void> {
+    console.log('🔄 Inicializando sistema de autenticación...');
+    isInitializing.value = true;
+
+    try {
+      await this.checkExistingSession();
+    } catch (error) {
+      console.error('❌ Error durante inicialización de auth:', error);
+      // En caso de error, limpiar sesión
+      this.logout();
+    } finally {
+      isInitializing.value = false;
+      console.log('✅ Inicialización de autenticación completa');
+    }
+  }
+
+  private async checkExistingSession(): Promise<void> {
     const savedUser = localStorage.getItem('user');
     const savedAuth = localStorage.getItem('auth');
-    if (savedUser && savedAuth) {
-      try {
-        currentUser.value = JSON.parse(savedUser);
-        authToken.value = savedAuth;
-      } catch {
+    
+    if (!savedUser || !savedAuth) {
+      console.log('📭 No hay sesión guardada');
+      return;
+    }
+
+    try {
+      console.log('🔍 Verificando sesión existente...');
+      
+      // Parsear datos guardados
+      const userData = JSON.parse(savedUser);
+      authToken.value = savedAuth;
+
+      // Verificar si la sesión sigue siendo válida con el backend
+      const testResponse = await fetch('/api/solicitudes', {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Basic ${savedAuth}`,
+          'Content-Type': 'application/json'
+        },
+        signal: AbortSignal.timeout(5000) // Timeout de 5 segundos
+      });
+      
+      if (testResponse.ok) {
+        console.log('✅ Sesión válida encontrada');
+        currentUser.value = userData;
+        
+        // Verificar permisos de admin si es necesario
+        if (!userData.role || userData.role === 'USUARIO') {
+          await this.determineUserRole(savedAuth);
+        }
+      } else {
+        console.log('❌ Sesión expirada o inválida');
         this.logout();
       }
+    } catch (error) {
+      console.error('❌ Error verificando sesión:', error);
+      this.logout();
+    }
+  }
+
+  private async determineUserRole(authToken: string): Promise<void> {
+    try {
+      const adminTestResponse = await fetch('/api/usuarios', {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Basic ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        signal: AbortSignal.timeout(3000)
+      });
+      
+      if (adminTestResponse.ok || adminTestResponse.status === 200) {
+        if (currentUser.value) {
+          currentUser.value.role = 'ADMIN';
+          localStorage.setItem('user', JSON.stringify(currentUser.value));
+          console.log('✅ Permisos de admin confirmados');
+        }
+      }
+    } catch (error) {
+      console.log('ℹ️ Usuario no tiene permisos de admin');
+      // Mantener como USUARIO
     }
   }
 
   async login(username: string, password: string): Promise<boolean> {
+    console.log('🔐 Iniciando proceso de login...');
     const encoded = btoa(`${username}:${password}`);
     authToken.value = encoded;
     localStorage.setItem('auth', encoded);
     
     try {
       // Intentar obtener información del usuario realizando una request que requiera autenticación
-      // El backend debería retornar información del usuario autenticado
+      console.log('🔍 Verificando credenciales con el servidor...');
       const testResponse = await fetch('/api/solicitudes', {
         method: 'GET',
         headers: { 
           'Authorization': `Basic ${encoded}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal: AbortSignal.timeout(10000) // Timeout de 10 segundos para login
       });
       
       if (testResponse.ok) {
-        // Si la request es exitosa, el usuario está autenticado
-        // Por ahora, determinar rol basado en si puede acceder a recursos admin
+        console.log('✅ Credenciales válidas');
+        
+        // Determinar rol basado en si puede acceder a recursos admin
         let role: 'ADMIN' | 'USUARIO' = 'USUARIO';
         
         try {
-          // Intentar acceder a un endpoint de admin para determinar el rol
+          console.log('🔍 Determinando permisos de usuario...');
           const adminTestResponse = await fetch('/api/usuarios', {
             method: 'GET',
             headers: { 
               'Authorization': `Basic ${encoded}`,
               'Content-Type': 'application/json'
-            }
+            },
+            signal: AbortSignal.timeout(5000)
           });
           
           if (adminTestResponse.ok || adminTestResponse.status === 200) {
             role = 'ADMIN';
+            console.log('✅ Permisos de administrador confirmados');
           }
         } catch (adminError) {
-          // Si falla, mantener como USUARIO
-          console.log('Usuario no tiene permisos de admin');
+          console.log('ℹ️ Usuario con permisos estándar');
         }
         
         currentUser.value = { 
@@ -78,12 +155,12 @@ class AuthService {
         console.log('✅ Login exitoso:', currentUser.value);
         return true;
       } else {
-        // Credenciales inválidas
+        console.log('❌ Credenciales inválidas');
         this.logout();
         return false;
       }
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('❌ Error en login:', error);
       this.logout();
       return false;
     }
@@ -98,6 +175,27 @@ class AuthService {
 
   isAuthenticated(): boolean {
     return !!authToken.value && !!localStorage.getItem('auth');
+  }
+
+  isInitializing(): boolean {
+    return isInitializing.value;
+  }
+
+  // Esperar a que la inicialización termine
+  async waitForInitialization(): Promise<void> {
+    return new Promise((resolve) => {
+      if (!isInitializing.value) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (!isInitializing.value) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 10);
+    });
   }
 
   getCurrentUser(): User | null {
@@ -121,6 +219,10 @@ class AuthService {
 
   get authenticated() {
     return authToken;
+  }
+
+  get initializing() {
+    return isInitializing;
   }
 }
 

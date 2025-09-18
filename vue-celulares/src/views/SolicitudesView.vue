@@ -7,13 +7,13 @@
         <div class="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white opacity-10 rounded-full"></div>
         <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-white opacity-5 rounded-full"></div>
         
-        <div class="relative flex items-center justify-between">
-          <div>
-            <h1 class="text-4xl font-bold mb-2">Gestión de Solicitudes</h1>
-            <p class="text-pink-100 text-lg">Administra y consulta las solicitudes de celulares</p>
+        <div class="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex-1">
+            <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2">Gestión de Solicitudes</h1>
+            <p class="text-pink-100 text-sm sm:text-lg">Administra y consulta las solicitudes de celulares</p>
           </div>
-          <div class="p-4 bg-white/20 backdrop-blur-lg rounded-2xl">
-            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="p-3 sm:p-4 bg-white/20 backdrop-blur-lg rounded-2xl flex-shrink-0">
+            <svg class="w-8 h-8 sm:w-12 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
             </svg>
           </div>

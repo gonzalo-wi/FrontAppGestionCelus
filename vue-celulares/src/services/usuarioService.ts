@@ -3,6 +3,7 @@ import type { Celular } from './celularService';
 
 export type Region = 'NORTE' | 'ESTE' | 'SUR' | 'OESTE' | 'LA_PLATA' | 'NAFA' | 'LAVAZZA' | 'TALLER'| 'IMPACTO'| 'COMERCIAL' | 'GERENCIA' | 'PLANTA'| 'SISTEMAS';
 export type Zona   = 'CIUDADELA' | 'LOMAS_DE_ZAMORA' | 'LA_PLATA';
+export type Cargo  = 'REPARTIDOR' | 'SUPERVISOR' | 'REGIONAL' | 'AYUDANTE' | 'AYUDANTE_ROTATIVO';
 
 export interface Usuario {
   numReparto: string;
@@ -11,6 +12,7 @@ export interface Usuario {
   numeroLinea?: string | null;
   cantCelularesRotos?: number;
   celular?: Celular | null;
+  cargo?: Cargo | null;
 }
 
 // Usamos http (axios compartido con interceptor de Authorization)
@@ -24,7 +26,7 @@ export const usuarioService = {
 
   // Obtener usuario por ID
   obtenerPorId(numReparto: string) {
-  return api.get<Usuario>(`/api/usuarios/${numReparto}`);
+  return api.get<Usuario>(`/api/usuarios/${encodeURIComponent(numReparto)}`);
   },
 
   // Crear usuario
@@ -34,12 +36,12 @@ export const usuarioService = {
 
   // Actualizar usuario
   actualizar(numReparto: string, usuario: Usuario) {
-  return api.put<Usuario>(`/api/usuarios/${numReparto}`, usuario);
+  return api.put<Usuario>(`/api/usuarios/${encodeURIComponent(numReparto)}`, usuario);
   },
 
   // Eliminar usuario
   eliminar(numReparto: string) {
-  return api.delete<void>(`/api/usuarios/${numReparto}`);
+  return api.delete<void>(`/api/usuarios/${encodeURIComponent(numReparto)}`);
   }
 };
 
@@ -71,7 +73,7 @@ export const crearMiSolicitud = (solicitud: any) => {
 
 // Actualizar línea de usuario en mi flota
 export const actualizarLineaFlota = (numReparto: string, numeroLinea: string | null) => {
-  return api.put(`/api/usuarios/flota/${numReparto}/linea`, { numeroLinea });
+  return api.put(`/api/usuarios/flota/${encodeURIComponent(numReparto)}/linea`, { numeroLinea });
 };
 
 // Obtener estadísticas de mi región

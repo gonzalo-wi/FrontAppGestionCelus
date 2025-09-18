@@ -1,5 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50">
+    <!-- Pantalla de carga de inicialización del sistema -->
+    <!-- Ya no se muestra porque la inicialización se hace antes de montar la app -->
+
     <!-- Pantalla de carga post-login -->
     <div v-if="isLoading" class="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-blue-900/95 via-purple-900/95 to-cyan-900/95 backdrop-blur-xl">
       <div class="text-center">
@@ -571,6 +574,7 @@ const logoutProgress = ref('w-0');
 // Usar los refs reactivos del authService - PRIMERO
 const currentUser = computed(() => authService.user.value);
 const isAuthenticated = computed(() => !!authService.authenticated.value);
+const isInitializingAuth = computed(() => authService.initializing.value);
 const isAdmin = computed(() => authService.isAdmin());
 
 // Función para toggle del sidebar
@@ -659,12 +663,10 @@ const logout = async () => {
 };
 
 onMounted(() => {
-  // Verificar autenticación al cargar la aplicación
-  if (!authService.isAuthenticated() && router.currentRoute.value.path !== '/login') {
-    router.push('/login');
-  }
+  console.log('🚀 App.vue montado');
   
-  // No activar loading automáticamente - solo cuando se detecte un nuevo login
+  // Los router guards ahora manejan toda la lógica de redirección
+  // No necesitamos verificación manual aquí
   
   // Asegurar que el sidebar inicie cerrado
   sidebarOpen.value = false;

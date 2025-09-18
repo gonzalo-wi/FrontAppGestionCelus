@@ -16,87 +16,87 @@
       
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
         <!-- Header -->
-        <div class="text-center mb-12">
-          <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent mb-4">
+        <div class="text-center mb-8 lg:mb-12 px-4">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent mb-4 leading-tight">
             Centro de Control Administrativo
           </h1>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Panel de administración con acceso rápido a funciones críticas del sistema
           </p>
-                </div>
+        </div>
 
         <!-- Acciones Críticas Centradas -->
-        <div class="flex justify-center mb-12">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <router-link to="/celulares" class="bg-blue-600 hover:bg-blue-700 text-white font-medium p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
-              <svg class="w-10 h-10 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex justify-center mb-8 lg:mb-12">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full max-w-4xl">
+            <router-link to="/celulares" class="bg-blue-600 hover:bg-blue-700 text-white font-medium p-4 sm:p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
+              <svg class="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path>
               </svg>
-              <div class="text-base font-bold">Inventario</div>
-              <div class="text-sm opacity-80">Celulares</div>
+              <div class="text-sm sm:text-base font-bold">Inventario</div>
+              <div class="text-xs sm:text-sm opacity-80">Celulares</div>
             </router-link>
             
-            <router-link to="/usuarios" class="bg-green-600 hover:bg-green-700 text-white font-medium p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
-              <svg class="w-10 h-10 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <router-link to="/usuarios" class="bg-green-600 hover:bg-green-700 text-white font-medium p-4 sm:p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
+              <svg class="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
               </svg>
-              <div class="text-base font-bold">Usuarios</div>
-              <div class="text-sm opacity-80">Gestión</div>
+              <div class="text-sm sm:text-base font-bold">Usuarios</div>
+              <div class="text-xs sm:text-sm opacity-80">Gestión</div>
             </router-link>
             
-            <router-link to="/mis-solicitudes" class="bg-orange-600 hover:bg-orange-700 text-white font-medium p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
-              <svg class="w-10 h-10 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <router-link to="/mis-solicitudes" class="bg-orange-600 hover:bg-orange-700 text-white font-medium p-4 sm:p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
+              <svg class="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v1a2 2 0 002 2h2m0 0a2 2 0 002 2v5.586a1 1 0 01-.293.707L9 18.414V20a2 2 0 01-2 2H5a2 2 0 01-2-2v-1.586a1 1 0 01.293-.707L5 16.414V14a2 2 0 012-2h2z"></path>
               </svg>
-              <div class="text-base font-bold">Solicitudes</div>
-              <div class="text-sm opacity-80">Revisar</div>
+              <div class="text-sm sm:text-base font-bold">Solicitudes</div>
+              <div class="text-xs sm:text-sm opacity-80">Revisar</div>
             </router-link>
             
-            <router-link to="/estadisticas" class="bg-purple-600 hover:bg-purple-700 text-white font-medium p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
-              <svg class="w-10 h-10 mx-auto mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <router-link to="/estadisticas" class="bg-purple-600 hover:bg-purple-700 text-white font-medium p-4 sm:p-6 rounded-xl transition-all duration-200 transform hover:scale-105 text-center group">
+              <svg class="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
-              <div class="text-base font-bold">Analytics</div>
-              <div class="text-sm opacity-80">Reportes</div>
+              <div class="text-sm sm:text-base font-bold">Analytics</div>
+              <div class="text-xs sm:text-sm opacity-80">Reportes</div>
             </router-link>
           </div>
         </div>
 
         <!-- Dashboard Content - Centrado -->
-        <div class="flex justify-center">
-          <div class="max-w-4xl w-full space-y-6">
+        <div class="flex justify-center px-4">
+          <div class="max-w-6xl w-full space-y-6">
             <!-- Resumen Ejecutivo -->
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-100 backdrop-blur-xl rounded-2xl p-6 border border-blue-200 shadow-lg">
-              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-100 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-blue-200 shadow-lg">
+              <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
                 Resumen Ejecutivo
               </h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-blue-600">{{ stats.loading ? '...' : stats.celulares }}</div>
-                  <div class="text-sm text-gray-600">Dispositivos</div>
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="text-center bg-white/50 rounded-lg p-3 sm:p-4">
+                  <div class="text-xl sm:text-2xl font-bold text-blue-600">{{ stats.loading ? '...' : stats.celulares }}</div>
+                  <div class="text-xs sm:text-sm text-gray-600">Dispositivos</div>
                 </div>
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-green-600">{{ stats.loading ? '...' : stats.usuarios }}</div>
-                  <div class="text-sm text-gray-600">Usuarios</div>
+                <div class="text-center bg-white/50 rounded-lg p-3 sm:p-4">
+                  <div class="text-xl sm:text-2xl font-bold text-green-600">{{ stats.loading ? '...' : stats.usuarios }}</div>
+                  <div class="text-xs sm:text-sm text-gray-600">Usuarios</div>
                 </div>
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-orange-600">{{ stats.loading ? '...' : stats.asignados }}</div>
-                  <div class="text-sm text-gray-600">Asignados</div>
+                <div class="text-center bg-white/50 rounded-lg p-3 sm:p-4">
+                  <div class="text-xl sm:text-2xl font-bold text-orange-600">{{ stats.loading ? '...' : stats.asignados }}</div>
+                  <div class="text-xs sm:text-sm text-gray-600">Asignados</div>
                 </div>
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-purple-600">{{ stats.loading ? '...' : stats.movimientos }}</div>
-                  <div class="text-sm text-gray-600">Movimientos</div>
+                <div class="text-center bg-white/50 rounded-lg p-3 sm:p-4">
+                  <div class="text-xl sm:text-2xl font-bold text-purple-600">{{ stats.loading ? '...' : stats.movimientos }}</div>
+                  <div class="text-xs sm:text-sm text-gray-600">Movimientos</div>
                 </div>
               </div>
             </div>
 
             <!-- Alertas del Sistema -->
-            <div class="bg-gradient-to-br from-orange-50 to-red-100 backdrop-blur-xl rounded-2xl p-6 border border-orange-200 shadow-lg">
-              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-gradient-to-br from-orange-50 to-red-100 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-orange-200 shadow-lg">
+              <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                 </svg>
                 Alertas del Sistema

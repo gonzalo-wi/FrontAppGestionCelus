@@ -80,33 +80,44 @@ const router = createRouter({
 });
 
 // Guard de navegación para autenticación
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
+  console.log(`🧭 Navegando a: ${to.path}`);
+  
+  // Si aún está inicializando (por alguna razón), esperar
+  if (authService.isInitializing()) {
+    console.log('⏳ Esperando inicialización de authService...');
+    await authService.waitForInitialization();
+    console.log('✅ Inicialización completa');
+  }
+  
   const isAuthenticated = authService.isAuthenticated();
   const isAdmin = authService.isAdmin();
   
-  // Si la ruta requiere autenticación
+  console.log(`👤 Autenticado: ${isAuthenticated}, Admin: ${isAdmin}, Ruta: ${to.path}`);
+  
+  // Si la ruta requiere autenticación y no está autenticado
   if (to.meta.requiresAuth && !isAuthenticated) {
+    console.log('🚫 Redirigiendo a login - sin autenticación');
     next('/login');
     return;
   }
   
-  // Si la ruta requiere permisos de admin
+  // Si la ruta requiere permisos de admin y no los tiene
   if (to.meta.requiresAdmin && !isAdmin) {
-    // Redirigir a mis solicitudes si es usuario normal
+    console.log('🚫 Redirigiendo a mis-solicitudes - sin permisos admin');
     next('/mis-solicitudes');
     return;
   }
   
-  // Si está autenticado y va a login, redirigir según rol
+  // Si está autenticado e intenta ir a login
   if (to.name === 'Login' && isAuthenticated) {
-    if (isAdmin) {
-      next('/');
-    } else {
-      next('/mis-solicitudes');
-    }
+    console.log('🔄 Usuario autenticado en login - redirigiendo a home');
+    const destination = isAdmin ? '/' : '/mis-solicitudes';
+    next(destination);
     return;
   }
   
+  console.log('✅ Navegación permitida');
   next();
 });
 

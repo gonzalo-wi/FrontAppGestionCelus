@@ -2,6 +2,8 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
 import { usuarioService } from '@/services/usuarioService.ts';
+import { celularService } from '@/services/celularService.ts';
+import { movimientoService } from '@/services/movimientoService.ts';
 import DataTable from '@/components/DataTable.vue';
 import Modal from '@/components/Modal.vue';
 import UsuarioFilters from '@/components/UsuarioFilters.vue';
@@ -13,6 +15,7 @@ const usuariosFiltrados = ref([]);
 const loading = ref(false);
 const showModal = ref(false);
 const showDeleteModal = ref(false);
+const loadingDelete = ref(false);
 const isEditing = ref(false);
 const selectedUser = ref(null);
 
@@ -31,13 +34,17 @@ const regiones = [
 const zonas = [
   'CIUDADELA', 'LOMAS_DE_ZAMORA', 'LA_PLATA'
 ];
+const cargos = [
+  'REPARTIDOR', 'SUPERVISOR', 'REGIONAL', 'AYUDANTE', 'AYUDANTE_ROTATIVO'
+];
 
 // Formulario
 const form = reactive({
   numReparto: '',
   region: '',
   zona: '',
-  numeroLinea: ''
+  numeroLinea: '',
+  cargo: ''
 });
 
 // Configuración de la tabla
@@ -45,7 +52,8 @@ const columns = [
   { key: 'numReparto', title: 'Num. Reparto' },
   { key: 'region', title: 'Región' },
   { key: 'zona', title: 'Zona' },
-  { key: 'numeroLinea', title: 'Línea' }
+  { key: 'numeroLinea', title: 'Línea' },
+  { key: 'cargo', title: 'Cargo' }
 ];
 
 // Notificaciones
@@ -75,6 +83,7 @@ const resetForm = () => {
   form.region = '';
   form.zona = '';
   form.numeroLinea = '';
+  form.cargo = '';
 };
 
 const openCreateModal = () => {
@@ -84,12 +93,16 @@ const openCreateModal = () => {
 };
 
 const openEditModal = (usuario) => {
+  console.log('✏️ Abriendo modal de edición para usuario:', usuario);
   isEditing.value = true;
   selectedUser.value = usuario;
   form.numReparto = usuario.numReparto;
   form.region = usuario.region;
   form.zona = usuario.zona;
   form.numeroLinea = usuario.numeroLinea || '';
+  form.cargo = usuario.cargo || '';
+  
+  console.log('📝 Form después de cargar:', form);
   showModal.value = true;
 };
 
@@ -108,55 +121,96 @@ const closeModal = () => {
 const cargarUsuarios = async () => {
   try {
     loading.value = true;
+    console.log('🔄 Cargando usuarios...');
     const response = await usuarioService.obtenerTodos();
-    usuarios.value = response.data;
-    usuariosFiltrados.value = response.data;
+    console.log('📥 Respuesta de usuarios:', response.data);
+    usuarios.value = response.data || [];
+    console.log('📋 Usuarios cargados:', usuarios.value.length);
+    
+    // Log de algunos usuarios para ver sus datos
+    if (usuarios.value.length > 0) {
+      console.log('👤 Ejemplo de usuario:', usuarios.value[0]);
+      // Buscar específicamente el usuario que acabamos de editar
+      const usuarioEditado = usuarios.value.find(u => u.numReparto === 'Alejandro Lassalle');
+      if (usuarioEditado) {
+        console.log('🎯 Usuario específico (Alejandro Lassalle):', usuarioEditado);
+        console.log('🏷️ Cargo del usuario editado:', usuarioEditado.cargo);
+      }
+    }
+    
+    aplicarFiltros();
   } catch (error) {
+    console.error('❌ Error al cargar usuarios:', error);
     showNotification('Error al cargar usuarios', 'error');
-    console.error('Error:', error);
   } finally {
     loading.value = false;
   }
 };
 
-const aplicarFiltros = (filtrosActivos) => {
+const aplicarFiltros = (filtrosActivos = null) => {
+  console.log('🔍 Aplicando filtros:', filtrosActivos);
+  console.log('👥 Usuarios disponibles:', usuarios.value?.length || 0);
+  
   let resultado = [...usuarios.value];
 
+  // Si no hay filtros activos, usar los filtros actuales del estado
+  const filtros = filtrosActivos || filters.value;
+
+  // Validar que todos los usuarios tengan las propiedades necesarias
+  resultado = resultado.filter(usuario => usuario && usuario.numReparto);
+
   // Filtro por número de reparto
-  if (filtrosActivos.numReparto) {
+  if (filtros.numReparto) {
     resultado = resultado.filter(usuario => 
-      usuario.numReparto.toLowerCase().includes(filtrosActivos.numReparto.toLowerCase())
+      usuario.numReparto && usuario.numReparto.toLowerCase().includes(filtros.numReparto.toLowerCase())
     );
   }
 
   // Filtro por línea
-  if (filtrosActivos.linea) {
+  if (filtros.linea) {
     resultado = resultado.filter(usuario => 
-      usuario.numeroLinea && usuario.numeroLinea.toLowerCase().includes(filtrosActivos.linea.toLowerCase())
+      usuario.numeroLinea && usuario.numeroLinea.toLowerCase().includes(filtros.linea.toLowerCase())
     );
   }
 
   // Filtro por región
-  if (filtrosActivos.region) {
-    resultado = resultado.filter(usuario => usuario.region === filtrosActivos.region);
+  if (filtros.region) {
+    resultado = resultado.filter(usuario => usuario.region === filtros.region);
+  }
+
+  // Filtro por cargo
+  if (filtros.cargo) {
+    if (filtros.cargo === 'SIN_CARGO') {
+      resultado = resultado.filter(usuario => !usuario.cargo);
+    } else {
+      resultado = resultado.filter(usuario => usuario.cargo === filtros.cargo);
+    }
   }
 
   // Ordenamiento
-  switch (filtrosActivos.ordenar) {
+  switch (filtros.ordenar) {
     case 'numReparto_asc':
-      resultado.sort((a, b) => a.numReparto.localeCompare(b.numReparto));
+      resultado.sort((a, b) => (a.numReparto || '').localeCompare(b.numReparto || ''));
       break;
     case 'numReparto_desc':
-      resultado.sort((a, b) => b.numReparto.localeCompare(a.numReparto));
+      resultado.sort((a, b) => (b.numReparto || '').localeCompare(a.numReparto || ''));
       break;
     case 'region':
-      resultado.sort((a, b) => a.region.localeCompare(b.region));
+      resultado.sort((a, b) => (a.region || '').localeCompare(b.region || ''));
       break;
     case 'zona':
-      resultado.sort((a, b) => a.zona.localeCompare(b.zona));
+      resultado.sort((a, b) => (a.zona || '').localeCompare(b.zona || ''));
+      break;
+    case 'cargo':
+      resultado.sort((a, b) => {
+        const cargoA = a.cargo || 'ZZZ_SIN_CARGO'; // Los sin cargo van al final
+        const cargoB = b.cargo || 'ZZZ_SIN_CARGO';
+        return cargoA.localeCompare(cargoB);
+      });
       break;
   }
 
+  console.log('✅ Filtros aplicados. Resultados:', resultado.length);
   usuariosFiltrados.value = resultado;
 };
 
@@ -169,43 +223,105 @@ const usuariosPaginados = computed(() => {
 
 const guardarUsuario = async () => {
   try {
+    // Debug logs
+    console.log('🔄 Guardando usuario...');
+    console.log('📝 Form data:', form);
+    console.log('📝 Is editing:', isEditing.value);
+    console.log('📝 Selected user:', selectedUser.value);
+    
     // Validar que zona no esté vacía
     if (!form.zona) {
       showNotification('Debe seleccionar una zona', 'error');
       return;
     }
+    
     const usuario = {
       numReparto: form.numReparto,
       region: form.region,
       zona: form.zona,
-      numeroLinea: form.numeroLinea || null
+      numeroLinea: form.numeroLinea || null,
+      cargo: form.cargo || null
     };
 
+    console.log('📦 Usuario a enviar:', usuario);
+
     if (isEditing.value) {
-      await usuarioService.actualizar(selectedUser.value.numReparto, usuario);
+      console.log('🔄 Actualizando usuario:', selectedUser.value.numReparto);
+      const response = await usuarioService.actualizar(selectedUser.value.numReparto, usuario);
+      console.log('✅ Respuesta de actualización:', response);
       showNotification('Usuario actualizado exitosamente');
     } else {
-      await usuarioService.crear(usuario);
+      console.log('➕ Creando nuevo usuario');
+      const response = await usuarioService.crear(usuario);
+      console.log('✅ Respuesta de creación:', response);
       showNotification('Usuario creado exitosamente');
     }
     
     closeModal();
-    cargarUsuarios();
+    await cargarUsuarios();
   } catch (error) {
-    showNotification('Error al guardar usuario', 'error');
-    console.error('Error:', error);
+    console.error('❌ Error al guardar usuario:', error);
+    console.error('❌ Error response:', error.response?.data);
+    console.error('❌ Error status:', error.response?.status);
+    showNotification('Error al guardar usuario: ' + (error.response?.data?.message || error.message), 'error');
   }
 };
 
 const eliminarUsuario = async () => {
   try {
-    await usuarioService.eliminar(selectedUser.value.numReparto);
+    if (loadingDelete.value) return;
+    loadingDelete.value = true;
+    if (!selectedUser.value) {
+      showNotification('No hay usuario seleccionado', 'error');
+      return;
+    }
+    const clave = selectedUser.value.numReparto;
+    if (!clave || typeof clave !== 'string') {
+      console.error('[EliminarUsuario] numReparto inválido:', selectedUser.value);
+      showNotification('Usuario sin número de reparto válido', 'error');
+      return;
+    }
+    // Pre-chequeo de dependencias: celulares y movimientos
+    const [celusResp, movsResp] = await Promise.allSettled([
+      celularService.obtenerTodos(),
+      movimientoService.obtenerTodos()
+    ]);
+
+    const celulares = celusResp.status === 'fulfilled' ? celusResp.value.data : [];
+    const movimientos = movsResp.status === 'fulfilled' ? movsResp.value.data : [];
+    const celularesAsociados = celulares.filter(c => c.usuario?.numReparto === clave);
+    const movimientosAsociados = movimientos.filter(m => m.usuario?.numReparto === clave);
+
+    if (celularesAsociados.length > 0 || movimientosAsociados.length > 0) {
+      showNotification(
+        `No se puede eliminar: tiene ${celularesAsociados.length} celular(es) y ${movimientosAsociados.length} movimiento(s) asociados`,
+        'error'
+      );
+      loadingDelete.value = false;
+      return;
+    }
+
+    console.log('[EliminarUsuario] Eliminando usuario numReparto=', clave);
+    await usuarioService.eliminar(clave);
     showNotification('Usuario eliminado exitosamente');
     closeModal();
-    cargarUsuarios();
+    await cargarUsuarios();
   } catch (error) {
-    showNotification('Error al eliminar usuario', 'error');
-    console.error('Error:', error);
+    const status = error?.response?.status;
+    const backendMsg = error?.response?.data?.message || error?.response?.data?.error;
+    console.error('[EliminarUsuario] Error:', status, backendMsg || error);
+    if (status === 404) {
+      showNotification('Usuario no encontrado (404)', 'error');
+    } else if (status === 409) {
+      showNotification('No se puede eliminar: tiene dependencias (409)', 'error');
+    } else if (status === 500) {
+      showNotification(`Error del servidor al eliminar (500)${backendMsg ? ': ' + backendMsg : ''}`, 'error');
+    } else {
+      showNotification(`Error al eliminar usuario${backendMsg ? ': ' + backendMsg : ''}`, 'error');
+    }
+  }
+  finally {
+    loadingDelete.value = false;
   }
 };
 
@@ -334,6 +450,7 @@ onMounted(() => {
                   <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Región</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Zona</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Línea</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[130px]">Cargo</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Acciones</th>
                 </tr>
               </thead>
@@ -365,6 +482,12 @@ onMounted(() => {
                     <div class="text-sm text-gray-700">
                       {{ usuario.numeroLinea || 'Sin línea asignada' }}
                     </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap min-w-[130px]">
+                    <span v-if="usuario.cargo" class="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800">
+                      {{ usuario.cargo.replace('_', ' ') }}
+                    </span>
+                    <span v-else class="text-sm text-gray-400 italic">Sin cargo</span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap min-w-[120px]">
                     <div class="flex items-center gap-2">
@@ -414,9 +537,13 @@ onMounted(() => {
                   <span class="text-xs font-semibold text-gray-500 uppercase">Zona</span>
                   <p class="text-sm font-medium text-gray-900 mt-1">{{ usuario.zona.replace('_', ' ') }}</p>
                 </div>
-                <div class="col-span-2">
+                <div>
                   <span class="text-xs font-semibold text-gray-500 uppercase">Línea</span>
                   <p class="text-sm font-medium text-gray-900 mt-1">{{ usuario.numeroLinea || 'Sin línea asignada' }}</p>
+                </div>
+                <div>
+                  <span class="text-xs font-semibold text-gray-500 uppercase">Cargo</span>
+                  <p class="text-sm font-medium text-gray-900 mt-1">{{ usuario.cargo ? usuario.cargo.replace('_', ' ') : 'Sin cargo' }}</p>
                 </div>
               </div>
               
@@ -514,6 +641,15 @@ onMounted(() => {
                 <p class="text-xs text-gray-500">Campo opcional. Número de línea telefónica asignada</p>
               </div>
 
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">Cargo</label>
+                <select v-model="form.cargo" 
+                        class="w-full bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200">
+                  <option value="">Seleccione un cargo (opcional)</option>
+                  <option v-for="c in cargos" :key="c" :value="c">{{ c.replace('_', ' ') }}</option>
+                </select>
+              </div>
+
               <!-- Botones -->
               <div class="flex gap-3 pt-4">
                 <button type="button" 
@@ -565,8 +701,8 @@ onMounted(() => {
                       class="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
                 Cancelar
               </button>
-              <button @click="eliminarUsuario" 
-                      class="flex-1 bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+        <button @click="eliminarUsuario" :disabled="loadingDelete"
+          class="flex-1 bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed">
                 Eliminar
               </button>
             </div>

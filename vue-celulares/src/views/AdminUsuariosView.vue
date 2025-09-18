@@ -1,20 +1,21 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4">
+  <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+    <div class="mb-6 lg:mb-8">
+      <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
         👤 Administración de Usuarios
       </h1>
-      <p class="text-gray-600 mt-2">Gestionar usuarios del sistema (Solo ADMIN)</p>
+      <p class="text-gray-600 mt-2 text-sm sm:text-base">Gestionar usuarios del sistema (Solo ADMIN)</p>
     </div>
 
     <!-- Botón Crear Usuario -->
     <div class="mb-6">
       <button 
         @click="abrirModalCrear"
-        class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105"
+        class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
       >
-        ✨ Crear Nuevo Usuario
+        <span class="hidden sm:inline">✨ Crear Nuevo Usuario</span>
+        <span class="sm:hidden">✨ Crear Usuario</span>
       </button>
     </div>
 
@@ -36,78 +37,136 @@
         </div>
       </div>
 
-      <!-- Tabla -->
-      <div v-else class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-            <tr>
-              <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Usuario</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Rol</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Región</th>
-              <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Fecha Creación</th>
-              <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200/50">
-            <tr 
-              v-for="usuario in usuarios" 
-              :key="usuario.username"
-              class="hover:bg-purple-50/50 transition-colors duration-200"
-            >
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                    {{ usuario.username.charAt(0).toUpperCase() }}
+      <!-- Tabla Desktop -->
+      <div v-else class="space-y-4">
+        <div class="hidden lg:block overflow-x-auto">
+          <table class="w-full" style="min-width: 800px;">
+            <thead class="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+              <tr>
+                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[180px]">Usuario</th>
+                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]">Rol</th>
+                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]">Región</th>
+                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[140px]">Fecha Creación</th>
+                <th class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider min-w-[160px]">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white/90 divide-y divide-gray-200/50">
+              <tr 
+                v-for="usuario in usuarios" 
+                :key="usuario.username"
+                class="hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200"
+              >
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                      {{ usuario.username.charAt(0).toUpperCase() }}
+                    </div>
+                    <span class="font-medium text-gray-900">{{ usuario.username }}</span>
                   </div>
-                  <span class="font-medium text-gray-900">{{ usuario.username }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span 
+                    class="inline-flex px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+                    :class="{
+                      'bg-gradient-to-r from-red-400 to-pink-500 text-white': usuario.rol === 'ADMIN',
+                      'bg-gradient-to-r from-blue-400 to-indigo-500 text-white': usuario.rol === 'USUARIO'
+                    }"
+                  >
+                    {{ usuario.rol }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                  {{ usuario.region.replace('_', ' ') }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                  {{ formatearFecha(usuario.fechaCreacion) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <div class="flex justify-center space-x-2">
+                    <button 
+                      @click="abrirModalEditar(usuario)"
+                      class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                      title="Editar usuario"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      @click="abrirModalPassword(usuario)"
+                      class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white p-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                      title="Cambiar contraseña"
+                    >
+                      🔑
+                    </button>
+                    <button 
+                      @click="confirmarEliminar(usuario)"
+                      class="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white p-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      title="Eliminar usuario"
+                      :disabled="usuario.username === 'admin'"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cards Mobile -->
+        <div class="lg:hidden space-y-4">
+          <div 
+            v-for="usuario in usuarios" 
+            :key="usuario.username"
+            class="bg-white/90 rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300"
+          >
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                  {{ usuario.username.charAt(0).toUpperCase() }}
                 </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="inline-flex px-3 py-1 rounded-full text-xs font-semibold"
-                  :class="{
-                    'bg-red-100 text-red-800': usuario.rol === 'ADMIN',
-                    'bg-blue-100 text-blue-800': usuario.rol === 'USUARIO'
-                  }"
-                >
-                  {{ usuario.rol }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-700">
-                {{ usuario.region.replace('_', ' ') }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-700">
-                {{ formatearFecha(usuario.fechaCreacion) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div class="flex justify-center space-x-2">
-                  <button 
-                    @click="abrirModalEditar(usuario)"
-                    class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
-                    title="Editar usuario"
-                  >
-                    ✏️
-                  </button>
-                  <button 
-                    @click="abrirModalPassword(usuario)"
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg transition-colors"
-                    title="Cambiar contraseña"
-                  >
-                    🔑
-                  </button>
-                  <button 
-                    @click="confirmarEliminar(usuario)"
-                    class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
-                    title="Eliminar usuario"
-                    :disabled="usuario.username === 'admin'"
-                  >
-                    🗑️
-                  </button>
+                <div>
+                  <h3 class="font-bold text-gray-900 text-lg">{{ usuario.username }}</h3>
+                  <p class="text-xs text-gray-500">{{ usuario.region.replace('_', ' ') }}</p>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+              <span 
+                class="inline-flex px-3 py-1 rounded-full text-xs font-semibold"
+                :class="{
+                  'bg-gradient-to-r from-red-400 to-pink-500 text-white': usuario.rol === 'ADMIN',
+                  'bg-gradient-to-r from-blue-400 to-indigo-500 text-white': usuario.rol === 'USUARIO'
+                }"
+              >
+                {{ usuario.rol }}
+              </span>
+            </div>
+            <div class="text-xs text-gray-500 mb-4">
+              Creado: {{ formatearFecha(usuario.fechaCreacion) }}
+            </div>
+            <div class="flex items-center gap-3 pt-3 border-t border-gray-200">
+              <button 
+                @click="abrirModalEditar(usuario)"
+                class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-xl font-semibold text-sm shadow-lg"
+              >
+                ✏️ Editar
+              </button>
+              <button 
+                @click="abrirModalPassword(usuario)"
+                class="p-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl shadow-lg"
+                title="Cambiar contraseña"
+              >
+                🔑
+              </button>
+              <button 
+                @click="confirmarEliminar(usuario)"
+                class="p-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Eliminar usuario"
+                :disabled="usuario.username === 'admin'"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -2,44 +2,44 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50 py-8">
     <div class="w-full px-4 sm:px-6 lg:px-8">
       <!-- Header con gradiente -->
-      <div class="relative mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-2xl p-8 text-white shadow-2xl">
+      <div class="relative mb-6 lg:mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-2xl p-6 lg:p-8 text-white shadow-2xl">
         <div class="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
         <div class="relative">
-          <h1 class="text-4xl font-bold mb-2">Mi Perfil</h1>
-          <p class="text-blue-100 text-lg">Gestiona tus solicitudes y consulta tu flota por región</p>
+          <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2">Mi Perfil</h1>
+          <p class="text-blue-100 text-sm sm:text-lg">Gestiona tus solicitudes y consulta tu flota por región</p>
         </div>
         <!-- Decoración -->
-        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full"></div>
-        <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-24 h-24 bg-white opacity-5 rounded-full"></div>
+        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 sm:w-32 h-24 sm:h-32 bg-white opacity-10 rounded-full"></div>
+        <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-16 sm:w-24 h-16 sm:h-24 bg-white opacity-5 rounded-full"></div>
       </div>
 
       <!-- Tabs modernas -->
-      <div class="mb-8">
-        <div class="bg-white/70 backdrop-blur-lg rounded-2xl p-2 inline-flex shadow-lg border border-white/20">
+      <div class="mb-6 lg:mb-8">
+        <div class="bg-white/70 backdrop-blur-lg rounded-2xl p-2 inline-flex shadow-lg border border-white/20 overflow-x-auto">
           <button @click="activeTab = 'solicitudes'"
                   :class="[
-                    'px-6 py-3 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2',
+                    'px-4 sm:px-6 py-3 rounded-xl font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap',
                     activeTab === 'solicitudes' 
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105' 
                       : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
                   ]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            Mis Solicitudes
+            <span class="hidden xs:inline">Mis </span>Solicitudes
           </button>
           <button @click="activeTab = 'mi-flota'; if (!flotaCargada) cargarMiFlota();"
                   v-if="authService.isAuthenticated()"
                   :class="[
-                    'px-6 py-3 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2',
+                    'px-4 sm:px-6 py-3 rounded-xl font-medium text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap',
                     activeTab === 'mi-flota' 
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105' 
                       : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
                   ]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
-            Mi Flota
+            <span class="hidden xs:inline">Mi </span>Flota
           </button>
         </div>
       </div>
@@ -262,40 +262,40 @@
           </div>
         </div>
 
-        <div v-else class="space-y-6">
+        <div v-else class="space-y-4 sm:space-y-6">
           <div v-for="solicitud in solicitudesPaginadas" :key="solicitud.id" 
-               class="bg-white/60 backdrop-blur-sm border-2 border-white/50 rounded-2xl p-6 hover:shadow-xl hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-1">
-            <div class="flex justify-between items-start mb-4">
-              <div class="flex items-center gap-4">
-                <div class="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               class="bg-white/60 backdrop-blur-sm border-2 border-white/50 rounded-2xl p-4 sm:p-6 hover:shadow-xl hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-1">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+              <div class="flex items-center gap-3 sm:gap-4">
+                <div class="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex-shrink-0">
+                  <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
                 </div>
-                <div>
-                  <h3 class="text-xl font-bold text-gray-900">Solicitud #{{ solicitud.id }}</h3>
-                  <div class="flex items-center gap-4 text-gray-600">
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg sm:text-xl font-bold text-gray-900">Solicitud #{{ solicitud.id }}</h3>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                     <div class="flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                       </svg>
-                      {{ solicitud.nomSolicitante }}
+                      <span class="truncate">{{ solicitud.nomSolicitante }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-4 0v4m-4 0h8m0 0V3m0 4h.01"></path>
                       </svg>
-                      {{ solicitud.fecha }}
+                      <span>{{ solicitud.fecha }}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                 <!-- Estado badge mejorado -->
                 <span :class="{
-                  'bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg': solicitud.estado === EstadoSolicitud.PENDIENTE,
-                  'bg-gradient-to-r from-blue-400 to-indigo-400 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg': solicitud.estado === EstadoSolicitud.EN_PROCESO,
-                  'bg-gradient-to-r from-green-400 to-emerald-400 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg': solicitud.estado === EstadoSolicitud.RESUELTA
+                  'bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg': solicitud.estado === EstadoSolicitud.PENDIENTE,
+                  'bg-gradient-to-r from-blue-400 to-indigo-400 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg': solicitud.estado === EstadoSolicitud.EN_PROCESO,
+                  'bg-gradient-to-r from-green-400 to-emerald-400 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg': solicitud.estado === EstadoSolicitud.RESUELTA
                 }">
                   {{ formatearEstado(solicitud.estado) }}
                 </span>
@@ -304,9 +304,9 @@
                   @click="descargarPDF(solicitud)"
                   :class="[
                     'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600',
-                    'text-white px-4 py-2 rounded-full text-sm font-semibold',
+                    'text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold',
                     'flex items-center gap-2 transform hover:scale-105',
-                    'transition-all duration-200 shadow-lg'
+                    'transition-all duration-200 shadow-lg w-full sm:w-auto justify-center sm:justify-start'
                   ]"
                   title="Descargar PDF"
                 >
@@ -318,36 +318,36 @@
               </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-4">
-              <div class="bg-white/50 rounded-xl p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm mb-4">
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
                 <div class="flex items-center gap-2 mb-2">
-                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                   </svg>
                   <span class="font-semibold text-gray-700">Tipo:</span>
                 </div>
-                <span class="text-gray-900 font-medium">{{ formatearTipoSolicitud(solicitud.tipoSolicitud) }}</span>
+                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ formatearTipoSolicitud(solicitud.tipoSolicitud) }}</span>
               </div>
-              <div class="bg-white/50 rounded-xl p-4">
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
                 <div class="flex items-center gap-2 mb-2">
-                  <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   </svg>
                   <span class="font-semibold text-gray-700">Región:</span>
                 </div>
-                <span class="text-gray-900 font-medium">{{ formatearRegion(solicitud.region) }}</span>
+                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ formatearRegion(solicitud.region) }}</span>
               </div>
-              <div class="bg-white/50 rounded-xl p-4">
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
                 <div class="flex items-center gap-2 mb-2">
-                  <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                   </svg>
                   <span class="font-semibold text-gray-700">Necesita línea:</span>
                 </div>
-                <span class="text-gray-900 font-medium">{{ solicitud.necesitaLinea ? 'Sí' : 'No' }}</span>
+                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ solicitud.necesitaLinea ? 'Sí' : 'No' }}</span>
               </div>
-              <div class="bg-white/50 rounded-xl p-4">
+              <div class="bg-white/50 rounded-xl p-3 sm:p-4">
                 <div class="flex items-center gap-2 mb-2">
                   <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -370,7 +370,7 @@
           </div>
           
           <!-- Paginación para Mis Solicitudes -->
-          <div v-if="misSolicitudes.length > itemsPerPageSolicitudes" class="mt-8">
+          <div v-if="misSolicitudes.length > itemsPerPageSolicitudes" class="mt-6 sm:mt-8">
             <Pagination
               :current-page="currentPageSolicitudes"
               :total-pages="totalPagesSolicitudes"
@@ -384,31 +384,33 @@
       </div>
     
       <!-- Mi Flota -->
-      <div v-if="activeTab === 'mi-flota'" class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 p-8">
-        <div class="flex justify-between items-center mb-8">
+      <div v-if="activeTab === 'mi-flota'" class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
           <div class="flex items-center gap-3">
-            <div class="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-2 sm:p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl sm:rounded-2xl">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900">Mi Flota</h2>
-              <p class="text-gray-600">Usuarios de tu región</p>
+              <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Mi Flota</h2>
+              <p class="text-sm sm:text-base text-gray-600">Usuarios de tu región</p>
             </div>
           </div>
           <button @click="cargarMiFlota" 
                   :class="[
-                    'px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200',
-                    'hover:from-gray-200 hover:to-gray-300 rounded-2xl text-sm font-semibold',
-                    'flex items-center gap-2 transform hover:scale-105',
-                    'transition-all duration-200 shadow-lg'
+                    'px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-gray-100 to-gray-200',
+                    'hover:from-gray-200 hover:to-gray-300 rounded-xl sm:rounded-2xl',
+                    'text-sm font-semibold flex items-center gap-2 justify-center sm:justify-start',
+                    'transform hover:scale-105 transition-all duration-200 shadow-lg',
+                    'w-full sm:w-auto'
                   ]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            Actualizar
+            <span class="hidden xs:inline">Actualizar</span>
+            <span class="xs:hidden">Actualizar</span>
           </button>
         </div>
 
@@ -435,21 +437,111 @@
 
         <div v-else class="bg-white/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/50">
           <!-- Estadísticas rápidas -->
-          <div class="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="text-lg font-semibold mb-1">Total de Usuarios</h3>
-                <p class="text-3xl font-bold">{{ miFlota.length }}</p>
+          <div class="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 sm:p-6 text-white">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div class="text-center sm:text-left">
+                <h3 class="text-base sm:text-lg font-semibold mb-1">Total de Usuarios</h3>
+                <p class="text-2xl sm:text-3xl font-bold">{{ miFlota.length }}</p>
               </div>
-              <div class="text-right">
-                <p class="text-cyan-100">Con Celular Asignado</p>
-                <p class="text-2xl font-bold">{{ miFlota.filter(u => u.celular).length }}</p>
+              <div class="text-center sm:text-right">
+                <p class="text-cyan-100 text-sm sm:text-base">Con Celular Asignado</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ miFlota.filter(u => u.celular).length }}</p>
               </div>
             </div>
           </div>
           
-          <!-- Tabla mejorada -->
-          <div class="overflow-x-auto">
+          <!-- Vista móvil con tarjetas (lg:hidden) -->
+          <div class="lg:hidden space-y-4 p-4">
+            <div 
+              v-for="u in flotaPaginada" 
+              :key="u.numReparto"
+              class="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-white/50 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {{ u.numReparto.toString().slice(-2) }}
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-900">Reparto {{ u.numReparto }}</p>
+                    <p class="text-sm text-gray-600">{{ u.zona }}</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  {{ u.region }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div class="bg-white/50 rounded-xl p-3">
+                  <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <span class="font-semibold text-gray-700 text-sm">Línea:</span>
+                  </div>
+                  <div v-if="!editandoLinea[u.numReparto]" class="flex items-center gap-2">
+                    <span v-if="u.numeroLinea" class="text-gray-900 font-medium text-sm">
+                      {{ u.numeroLinea }}
+                    </span>
+                    <span v-else class="text-gray-400 italic text-sm">Sin línea</span>
+                    <button @click="iniciarEdicionLinea(u)" 
+                            class="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                            title="Editar línea">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-else class="flex items-center gap-2">
+                    <input 
+                      v-model="numeroLineaTemporal[u.numReparto]"
+                      type="text" 
+                      class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Número de línea"
+                      @keyup.enter="guardarLinea(u)"
+                      @keyup.escape="cancelarEdicionLinea(u)"
+                    />
+                    <div class="flex gap-1">
+                      <button @click="guardarLinea(u)" 
+                              class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                              title="Guardar">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </button>
+                      <button @click="cancelarEdicionLinea(u)" 
+                              class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                              title="Cancelar">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white/50 rounded-xl p-3">
+                  <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="font-semibold text-gray-700 text-sm">Celular:</span>
+                  </div>
+                  <div v-if="u.celular">
+                    <p class="text-sm font-medium text-gray-900">{{ u.celular.marca }} {{ u.celular.modelo }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ u.celular.numeroSerie || 'S/N no disponible' }}</p>
+                  </div>
+                  <div v-else>
+                    <span class="text-gray-400 italic text-sm">Sin asignar</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vista de escritorio con tabla (hidden lg:block) -->
+          <div class="hidden lg:block overflow-x-auto">
             <table class="min-w-full">
               <thead class="bg-gray-50/80">
                 <tr>
@@ -584,7 +676,7 @@
           </div>
           
           <!-- Paginación para Mi Flota -->
-          <div v-if="miFlota.length > itemsPerPageFlota" class="mt-6 px-6 pb-6">
+          <div v-if="miFlota.length > itemsPerPageFlota" class="mt-4 sm:mt-6 px-4 sm:px-6 pb-4 sm:pb-6">
             <Pagination
               :current-page="currentPageFlota"
               :total-pages="totalPagesFlota"

@@ -1,6 +1,8 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative overflow-visible">
-    <div class="mb-6">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <!-- Lista de sugerencias para usuario -->
+          <div v-if="showUsuarioSuggestions && filteredUsuarios.length > 0" 
+               class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-60 overflow-y-auto">v class="mb-6">
       <h2 class="text-xl font-semibold text-gray-900">Crear Movimiento</h2>
       <p class="text-sm text-gray-500 mt-1">Registra un nuevo movimiento de celular</p>
     </div>
@@ -75,10 +77,9 @@
         <div class="relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
           <input 
-            ref="usuarioInput"
             v-model="usuarioSearch"
             @input="onUsuarioSearch"
-            @focus="showUsuarioSuggestions = true; checkDropdownPosition()"
+            @focus="showUsuarioSuggestions = true"
             @blur="hideUsuarioSuggestions"
             type="text" 
             required
@@ -87,12 +88,9 @@
             autocomplete="off"
           />
           
-          <!-- Lista de sugerencias para usuario con posicionamiento dinámico -->
+          <!-- Lista de sugerencias para usuario -->
           <div v-if="showUsuarioSuggestions && filteredUsuarios.length > 0" 
-               :class="[
-                 'absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-2xl max-h-60 overflow-y-auto',
-                 shouldShowUsuarioDropdownAbove ? 'bottom-full mb-1' : 'top-full mt-1'
-               ]">
+               class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
             <div 
               v-for="usuario in filteredUsuarios" 
               :key="usuario.numReparto"
@@ -148,7 +146,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, nextTick } from 'vue';
+import { reactive, ref, computed } from 'vue';
 
 const props = defineProps({
   celulares: { type: Array, default: () => [] },
@@ -163,9 +161,6 @@ const form = reactive({
   descripcion: ''
 });
 
-// Referencias para los elementos
-const usuarioInput = ref(null);
-
 // Estados para el campo predictivo de celular
 const celularSearch = ref('');
 const selectedCelular = ref(null);
@@ -175,7 +170,6 @@ const showCelularSuggestions = ref(false);
 const usuarioSearch = ref('');
 const selectedUsuario = ref(null);
 const showUsuarioSuggestions = ref(false);
-const shouldShowUsuarioDropdownAbove = ref(false);
 
 // Computed para filtrar celulares
 const filteredCelulares = computed(() => {
@@ -232,7 +226,6 @@ const hideCelularSuggestions = () => {
 const onUsuarioSearch = () => {
   selectedUsuario.value = null;
   showUsuarioSuggestions.value = true;
-  checkDropdownPosition();
 };
 
 const selectUsuario = (usuario) => {
@@ -245,21 +238,6 @@ const hideUsuarioSuggestions = () => {
   setTimeout(() => {
     showUsuarioSuggestions.value = false;
   }, 150); // Delay para permitir el click en las sugerencias
-};
-
-// Función para verificar si el dropdown debe mostrarse arriba
-const checkDropdownPosition = async () => {
-  await nextTick();
-  if (usuarioInput.value) {
-    const inputRect = usuarioInput.value.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const dropdownHeight = 240; // max-h-60 = ~240px
-    const spaceBelow = viewportHeight - inputRect.bottom;
-    const spaceAbove = inputRect.top;
-    
-    // Si no hay suficiente espacio abajo pero sí arriba, mostrar arriba
-    shouldShowUsuarioDropdownAbove.value = spaceBelow < dropdownHeight && spaceAbove > dropdownHeight;
-  }
 };
 
 const resetForm = () => {

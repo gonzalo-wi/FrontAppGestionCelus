@@ -1,5 +1,5 @@
 import http from './http';
-import { mapearTipoMovimiento, mapearTipoMovimientoInverso } from '@/types/tipoMovimiento';
+import { mapearTipoMovimiento } from '@/types/tipoMovimiento';
 
 const api = http;
 
@@ -70,16 +70,8 @@ export const movimientoService = {
     
     for (const tipo of tiposParaProbar) {
       try {
-        // Crear un movimiento de prueba (no se guardará si falla)
-        const movimientoPrueba = {
-          tipo: tipo,
-          fecha: new Date().toISOString().split('T')[0],
-          motivo: `Prueba de tipo ${tipo}`,
-          celularId: 1,
-          usuarioId: 'test'
-        };
-        
-        console.log(`✅ Tipo ${tipo}: VÁLIDO`);
+        // Solo logging de tipos válidos, sin crear variables innecesarias
+        console.log(`✅ Tipo ${tipo}: VÁLIDO (simulado)`);
       } catch (error: any) {
         if (error.response?.status === 500 && error.response.data?.message?.includes('No enum constant')) {
           console.log(`❌ Tipo ${tipo}: INVÁLIDO - ${error.response.data.message}`);

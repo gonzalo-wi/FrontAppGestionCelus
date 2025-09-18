@@ -13,7 +13,7 @@
       </button>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <!-- Búsqueda por número de reparto -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Número de Reparto</label>
@@ -66,6 +66,24 @@
         </select>
       </div>
 
+      <!-- Filtro por cargo -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
+        <select 
+          v-model="filtros.cargo"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+          @change="aplicarFiltros"
+        >
+          <option value="">Todos los cargos</option>
+          <option value="REPARTIDOR">REPARTIDOR</option>
+          <option value="SUPERVISOR">SUPERVISOR</option>
+          <option value="REGIONAL">REGIONAL</option>
+          <option value="AYUDANTE">AYUDANTE</option>
+          <option value="AYUDANTE_ROTATIVO">AYUDANTE ROTATIVO</option>
+          <option value="SIN_CARGO">Sin cargo</option>
+        </select>
+      </div>
+
       <!-- Ordenar por -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
@@ -78,6 +96,7 @@
           <option value="numReparto_asc">Número de reparto (A-Z)</option>
           <option value="numReparto_desc">Número de reparto (Z-A)</option>
           <option value="region">Región</option>
+          <option value="cargo">Cargo</option>
         </select>
       </div>
     </div>
@@ -108,6 +127,10 @@
         Región: {{ filtros.region }}
         <button @click="filtros.region = ''; aplicarFiltros()" class="ml-2 text-green-600 hover:text-green-800">×</button>
       </span>
+      <span v-if="filtros.cargo" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+        Cargo: {{ filtros.cargo === 'SIN_CARGO' ? 'Sin cargo' : filtros.cargo.replace('_', ' ') }}
+        <button @click="filtros.cargo = ''; aplicarFiltros()" class="ml-2 text-purple-600 hover:text-purple-800">×</button>
+      </span>
     </div>
   </div>
 </template>
@@ -128,13 +151,15 @@ const filtros = ref({
   numReparto: '',
   linea: '',
   region: '',
+  cargo: '',
   ordenar: ''
 });
 
 const tieneFiltrosActivos = computed(() => {
   return filtros.value.numReparto || 
          filtros.value.linea ||
-         filtros.value.region;
+         filtros.value.region ||
+         filtros.value.cargo;
 });
 
 const aplicarFiltros = () => {
@@ -146,6 +171,7 @@ const limpiarFiltros = () => {
     numReparto: '',
     linea: '',
     region: '',
+    cargo: '',
     ordenar: ''
   };
   aplicarFiltros();

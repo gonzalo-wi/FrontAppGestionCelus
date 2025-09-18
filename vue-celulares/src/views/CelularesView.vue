@@ -1,7 +1,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
-import { crearMovimiento, obtenerMovimientos, celularService } from '@/services/celularService.ts';
+import { celularService } from '@/services/celularService.ts';
 import { movimientoService } from '@/services/movimientoService.ts';
 import { usuarioService } from '@/services/usuarioService.ts';
 import DataTable from '@/components/DataTable.vue';
@@ -224,7 +224,7 @@ const cargarCelulares = async () => {
 
 const cargarMovimientos = async () => {
   try {
-    const response = await obtenerMovimientos();
+    const response = await movimientoService.obtenerTodos();
     movimientos.value = response.data;
   } catch (error) {
     console.error('Error cargando movimientos:', error);
@@ -293,7 +293,7 @@ const eliminarCelular = async () => {
 const guardarMovimiento = async (movimientoData) => {
   try {
     loadingMovimiento.value = true;
-    await crearMovimiento(movimientoData);
+    await movimientoService.crear(movimientoData);
     showNotification('Movimiento creado exitosamente');
     cargarMovimientos();
   } catch (error) {
@@ -333,14 +333,33 @@ const confirmarEliminarMovimiento = (movimiento) => {
 
 const eliminarMovimiento = async () => {
   try {
-    await movimientoService.eliminar(selectedMovimiento.value.id);
+    if (!selectedMovimiento.value) {
+      console.warn('[EliminarMovimiento] No hay movimiento seleccionado');
+      showNotification('No hay movimiento seleccionado', 'error');
+      return;
+    }
+    const id = selectedMovimiento.value.id || selectedMovimiento.value.idMovimiento || selectedMovimiento.value?.movimientoId;
+    if (!id) {
+      console.error('[EliminarMovimiento] El objeto movimiento no tiene un ID válido:', selectedMovimiento.value);
+      showNotification('Movimiento sin ID (revisar backend)', 'error');
+      return;
+    }
+    console.log('[EliminarMovimiento] Eliminando movimiento id=', id, 'obj:', selectedMovimiento.value);
+    await movimientoService.eliminar(id);
     showNotification('Movimiento eliminado exitosamente');
     showDeleteMovimientoModal.value = false;
     selectedMovimiento.value = null;
-    cargarMovimientos();
+    await cargarMovimientos();
   } catch (error) {
-    showNotification('Error al eliminar movimiento', 'error');
-    console.error('Error:', error);
+    const status = error?.response?.status;
+    console.error('[EliminarMovimiento] Error eliminando movimiento:', status, error);
+    if (status === 404) {
+      showNotification('Movimiento no encontrado (404)', 'error');
+    } else if (status === 401) {
+      showNotification('Sesión expirada (401)', 'error');
+    } else {
+      showNotification('Error al eliminar movimiento', 'error');
+    }
   }
 };
 
@@ -455,21 +474,21 @@ onMounted(() => {
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50 py-8">
     <div class="w-full px-4 sm:px-6 lg:px-8">
       <!-- Header con gradiente -->
-      <div class="relative mb-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-white shadow-2xl overflow-hidden">
+      <div class="relative mb-6 lg:mb-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 text-white shadow-2xl overflow-hidden">
         <div class="absolute inset-0 bg-black opacity-10"></div>
-        <div class="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white opacity-10 rounded-full"></div>
-        <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-white opacity-5 rounded-full"></div>
+        <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 lg:w-40 lg:h-40 bg-white opacity-10 rounded-full"></div>
+        <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-24 h-24 lg:w-32 lg:h-32 bg-white opacity-5 rounded-full"></div>
         
         <div class="relative">
-          <div class="flex items-center gap-4 mb-4">
-            <div class="p-4 bg-white/20 backdrop-blur-lg rounded-2xl">
-              <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
+            <div class="p-3 lg:p-4 bg-white/20 backdrop-blur-lg rounded-xl lg:rounded-2xl">
+              <svg class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path>
               </svg>
             </div>
             <div>
-              <h1 class="text-4xl font-bold mb-2">Gestión de Celulares</h1>
-              <p class="text-indigo-100 text-lg">Administra el inventario de celulares y sus movimientos</p>
+              <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Gestión de Celulares</h1>
+              <p class="text-indigo-100 text-sm sm:text-base lg:text-lg">Administra el inventario de celulares y sus movimientos</p>
             </div>
           </div>
         </div>
@@ -502,45 +521,45 @@ onMounted(() => {
       </div>
 
       <!-- Pestañas modernas -->
-      <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-2 mb-8">
-        <nav class="flex space-x-2">
+      <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-1 sm:p-2 mb-6 lg:mb-8">
+        <nav class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
           <button @click="activeTab = 'celulares'"
                   :class="[
-                    'flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-semibold text-sm transition-all duration-300 transform hover:scale-105',
+                    'flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm transition-all duration-300',
                     activeTab === 'celulares' 
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl' 
                       : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
                   ]">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path>
             </svg>
-            <span class="text-lg">Celulares</span>
+            <span class="text-sm sm:text-lg">Celulares</span>
             <span v-if="activeTab === 'celulares'" class="bg-white/20 px-2 py-1 rounded-lg text-xs font-bold">{{ celulares.length }}</span>
           </button>
           <button @click="activeTab = 'movimientos'"
                   :class="[
-                    'flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-semibold text-sm transition-all duration-300 transform hover:scale-105',
+                    'flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm transition-all duration-300',
                     activeTab === 'movimientos' 
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl' 
                       : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
                   ]">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
             </svg>
-            <span class="text-lg">Movimientos</span>
+            <span class="text-sm sm:text-lg">Movimientos</span>
             <span v-if="activeTab === 'movimientos'" class="bg-white/20 px-2 py-1 rounded-lg text-xs font-bold">{{ movimientos.length }}</span>
           </button>
           <button @click="activeTab = 'reportar-roto'"
                   :class="[
-                    'flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-semibold text-sm transition-all duration-300 transform hover:scale-105',
+                    'flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm transition-all duration-300',
                     activeTab === 'reportar-roto' 
                       ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white shadow-xl' 
                       : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
                   ]">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
             </svg>
-            <span class="text-lg">Reportar Roto</span>
+            <span class="text-sm sm:text-lg">Reportar Roto</span>
           </button>
         </nav>
       </div>
@@ -548,12 +567,12 @@ onMounted(() => {
       <!-- Contenido de las pestañas -->
       <div v-if="activeTab === 'celulares'" class="space-y-8">
         <!-- Filtros modernos -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6">
+        <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
           <CelularFilters @filter="aplicarFiltros" />
         </div>
         
         <!-- Formulario de celular moderno -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6">
+        <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
           <CelularForm 
             :celular="editingCelular"
             :loading="loadingCelular"
@@ -563,11 +582,11 @@ onMounted(() => {
         </div>
 
         <!-- Tabla de celulares moderna -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4">
-              <div class="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-8 overflow-hidden">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 lg:mb-6 gap-4">
+            <div class="flex items-center gap-3 lg:gap-4">
+              <div class="p-2 lg:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl lg:rounded-2xl">
+                <svg class="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path>
                 </svg>
               </div>
@@ -798,7 +817,7 @@ onMounted(() => {
         </div>
         
         <!-- Formulario de movimientos moderno -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6">
+        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 relative overflow-visible">
           <MovimientoForm 
             :celulares="celulares"
             :usuarios="usuarios"

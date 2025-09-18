@@ -190,23 +190,24 @@ onMounted(() => cargarProveedores());
         <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white opacity-10 rounded-full"></div>
         <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-white opacity-5 rounded-full"></div>
-        <div class="relative flex items-center justify-between">
+        <div class="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="p-4 bg-white/20 backdrop-blur-lg rounded-2xl">
-              <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 sm:p-4 bg-white/20 backdrop-blur-lg rounded-2xl flex-shrink-0">
+              <svg class="w-8 h-8 sm:w-12 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h6l7 10h5M3 7l4 12h12" />
               </svg>
             </div>
-            <div>
-              <h1 class="text-4xl font-bold mb-2">Gestión de Proveedores</h1>
-              <p class="text-fuchsia-100 text-lg">Administra los proveedores y tiempos de reparación</p>
+            <div class="flex-1">
+              <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2">Gestión de Proveedores</h1>
+              <p class="text-fuchsia-100 text-sm sm:text-lg">Administra los proveedores y tiempos de reparación</p>
             </div>
           </div>
-          <button @click="toggleFormulario" class="group relative bg-white/20 backdrop-blur-lg text-white px-6 py-3 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20">
-            <svg class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button @click="toggleFormulario" class="group relative bg-white/20 backdrop-blur-lg text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20 whitespace-nowrap">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            {{ mostrandoFormulario ? (isEditing ? 'Cancelar Edición' : 'Ocultar Formulario') : 'Nuevo Proveedor' }}
+            <span class="hidden sm:inline">{{ mostrandoFormulario ? (isEditing ? 'Cancelar Edición' : 'Ocultar Formulario') : 'Nuevo Proveedor' }}</span>
+            <span class="sm:hidden">{{ mostrandoFormulario ? 'Cancelar' : 'Nuevo' }}</span>
           </button>
         </div>
       </div>
