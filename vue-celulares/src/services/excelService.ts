@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import type { MovimientoDetalle, SolicitudDetalle, EstadisticasMensuales, EstadisticasRegion, RepartoRotura } from './estadisticasService';
+import type { MovimientoDetalle, SolicitudDetalle, EstadisticasMensuales } from './estadisticasService';
 import { estadisticasService } from './estadisticasService';
 
 class ExcelService {
