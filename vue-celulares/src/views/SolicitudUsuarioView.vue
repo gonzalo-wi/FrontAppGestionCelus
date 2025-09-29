@@ -130,6 +130,7 @@
               <option value="CAMBIO_POR_ROTURA">CAMBIO POR ROTURA</option>
               <option value="NUEVO_EQUIPO">NUEVO EQUIPO</option>
               <option value="ROBO">ROBO</option>
+              <option value="PERDIDA">PERDIDA</option>
             </select>
           </div>
           <div class="md:col-span-2 space-y-2">
@@ -153,6 +154,64 @@
               :placeholder="form.motivoTipo === 'OTRO' ? 'Describe detalladamente el problema...' : 'Agrega detalles adicionales si es necesario...'"
               :required="form.motivoTipo === 'OTRO'"
             ></textarea>
+          </div>
+
+          <!-- Componente de upload de denuncia para ROBO -->
+          <div v-if="form.tipoSolicitud === 'ROBO'" class="md:col-span-2 space-y-3">
+            <label class="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Adjuntar Denuncia PDF (Obligatorio para casos de robo)
+            </label>
+            <div class="border-2 border-dashed border-red-300 rounded-2xl p-6 bg-red-50/30 backdrop-blur-sm">
+              <input 
+                ref="denunciaInput"
+                type="file" 
+                accept=".pdf"
+                @change="onDenunciaSelected"
+                class="hidden"
+                required
+              />
+              
+              <div v-if="!form.archivoDenuncia" 
+                   @click="$refs.denunciaInput.click()"
+                   class="cursor-pointer text-center space-y-3 p-4 hover:bg-red-100/30 rounded-xl transition-all duration-200">
+                <div class="flex justify-center">
+                  <svg class="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-lg font-semibold text-gray-700">Haz click para seleccionar la denuncia</p>
+                  <p class="text-sm text-gray-500">Solo archivos PDF • Máximo 10MB</p>
+                </div>
+              </div>
+
+              <div v-else class="flex items-center justify-between bg-white/70 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                  <div class="p-2 bg-red-100 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-900">{{ form.archivoDenuncia.name }}</p>
+                    <p class="text-sm text-gray-500">{{ formatFileSize(form.archivoDenuncia.size) }}</p>
+                  </div>
+                </div>
+                <button 
+                  @click="removeDenuncia"
+                  type="button"
+                  class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                  title="Remover archivo"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
           
           <div v-if="form.tipoSolicitud === 'NUEVO_EQUIPO'" class="space-y-3">
@@ -326,7 +385,38 @@
                   </svg>
                   <span class="font-semibold text-gray-700">Tipo:</span>
                 </div>
-                <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ formatearTipoSolicitud(solicitud.tipoSolicitud) }}</span>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-gray-900 font-medium text-xs sm:text-sm">{{ formatearTipoSolicitud(solicitud.tipoSolicitud) }}</span>
+                  <!-- Indicador de ROBO con denuncia -->
+                  <PdfThumbnail 
+                    v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                    :solicitud-id="solicitud.id"
+                    :nombre-archivo="solicitud.nombreArchivoDenuncia"
+                    :tiene-denuncia="solicitud.tieneDenunciaAdjunta"
+                  />
+                  <span v-else-if="solicitud.tipoSolicitud === 'ROBO'" 
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    Sin denuncia
+                  </span>
+                  <!-- Botón descargar denuncia -->
+                  <button v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                          @click="descargarDenuncia(solicitud.id)"
+                          :disabled="descargandoDenuncia"
+                          class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Descargar denuncia PDF">
+                    <svg v-if="!descargandoDenuncia" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <svg v-else class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {{ descargandoDenuncia ? 'Descargando...' : 'Descargar' }}
+                  </button>
+                </div>
               </div>
               <div class="bg-white/50 rounded-xl p-3 sm:p-4">
                 <div class="flex items-center gap-2 mb-2">
@@ -375,7 +465,7 @@
               :current-page="currentPageSolicitudes"
               :total-pages="totalPagesSolicitudes"
               :items-per-page="itemsPerPageSolicitudes"
-              :total-items="misSolicitudes.length"
+              :total-records="misSolicitudes.length"
               @page-changed="onPageChangedSolicitudes"
               @items-per-page-changed="onItemsPerPageChangedSolicitudes"
             />
@@ -412,6 +502,72 @@
             <span class="hidden xs:inline">Actualizar</span>
             <span class="xs:hidden">Actualizar</span>
           </button>
+        </div>
+
+        <!-- Filtros por cargo -->
+        <div class="mb-6 bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+            </svg>
+            Filtrar por cargo
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <button @click="filtrarPorCargo('TODOS')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'TODOS'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Todos
+            </button>
+            <button @click="filtrarPorCargo('REPARTIDOR')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'REPARTIDOR'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Repartidores
+            </button>
+            <button @click="filtrarPorCargo('AYUDANTE')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'AYUDANTE'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Ayudantes
+            </button>
+            <button @click="filtrarPorCargo('AYUDANTE_ROTATIVO')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'AYUDANTE_ROTATIVO'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Ayudantes Rotativos
+            </button>
+            <button @click="filtrarPorCargo('SUPERVISOR')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'SUPERVISOR'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Supervisores
+            </button>
+            <button @click="filtrarPorCargo('REGIONAL')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'REGIONAL'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Regional
+            </button>
+          </div>
         </div>
 
         <div v-if="loadingFlota" class="text-center py-12">
@@ -556,6 +712,14 @@
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     <div class="flex items-center gap-2">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0L8 6"></path>
+                      </svg>
+                      Cargo
+                    </div>
+                  </th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                       </svg>
@@ -598,6 +762,14 @@
                       </div>
                       <span class="text-sm font-semibold text-gray-900">{{ u.numReparto }}</span>
                     </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="[
+                      'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
+                      getCargoClass(u.cargo)
+                    ]">
+                      {{ formatearCargo(u.cargo) }}
+                    </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -681,7 +853,7 @@
               :current-page="currentPageFlota"
               :total-pages="totalPagesFlota"
               :items-per-page="itemsPerPageFlota"
-              :total-items="miFlota.length"
+              :total-records="miFlota.length"
               @page-changed="onPageChangedFlota"
               @items-per-page-changed="onItemsPerPageChangedFlota"
             />
@@ -700,6 +872,7 @@ import { excelService } from '@/services/excelService';
 import { pdfService } from '@/services/pdfService';
 import { obtenerMiFlota, obtenerMisSolicitudes, obtenerSolicitudesMiRegion, crearMiSolicitud, actualizarLineaFlota } from '@/services/usuarioService';
 import Pagination from '@/components/Pagination.vue';
+import PdfThumbnail from '@/components/PdfThumbnail.vue';
 
 // Funciones helper para formatear enums
 const formatearTipoSolicitud = (tipo) => {
@@ -708,6 +881,10 @@ const formatearTipoSolicitud = (tipo) => {
       return 'Cambio por rotura';
     case 'NUEVO_EQUIPO':
       return 'Equipo nuevo';
+    case 'ROBO':
+      return 'Robo';
+    case 'PERDIDA':
+      return 'Pérdida';
     default:
       return tipo?.replace(/_/g, ' ') || 'N/A';
   }
@@ -743,6 +920,7 @@ const misSolicitudes = ref([]);
 const loading = ref(false);
 const loadingSolicitudes = ref(false);
 const loadingFlota = ref(false);
+const descargandoDenuncia = ref(false);
 const miFlota = ref([]);
 const flotaCargada = ref(false);
 const notification = reactive({ show: false, type: 'success', message: '' });
@@ -754,6 +932,10 @@ const itemsPerPageSolicitudes = ref(5);
 // Paginación para Mi Flota
 const currentPageFlota = ref(1);
 const itemsPerPageFlota = ref(10);
+
+// Filtros para Mi Flota
+const filtroCargoFlota = ref('TODOS');
+const mostrarMenuCargo = ref(false);
 
 // Estado para edición de líneas
 const editandoLinea = ref({});
@@ -769,7 +951,8 @@ const initializeForm = () => {
     tipoSolicitud: '',
     motivoTipo: '',
     motivo: '',
-    necesitaLinea: false
+    necesitaLinea: false,
+    archivoDenuncia: null
   };
   
   // Solo incluir región si es admin
@@ -793,24 +976,54 @@ const tiposMotivo = [
 
 // Computed para paginación de Mis Solicitudes
 const totalPagesSolicitudes = computed(() => {
-  return Math.ceil(misSolicitudes.value.length / itemsPerPageSolicitudes.value);
+  return Math.ceil(solicitudesOrdenadas.value.length / itemsPerPageSolicitudes.value);
+});
+
+const solicitudesOrdenadas = computed(() => {
+  return [...misSolicitudes.value].sort((a, b) => {
+    // Ordenar por fecha de creación descendente (más reciente primero)
+    if (a.fecha && b.fecha) {
+      return new Date(b.fecha) - new Date(a.fecha);
+    }
+    // Si no hay fecha, ordenar por ID descendente
+    return (b.id || 0) - (a.id || 0);
+  });
 });
 
 const solicitudesPaginadas = computed(() => {
   const inicio = (currentPageSolicitudes.value - 1) * itemsPerPageSolicitudes.value;
   const fin = inicio + itemsPerPageSolicitudes.value;
-  return misSolicitudes.value.slice(inicio, fin);
+  return solicitudesOrdenadas.value.slice(inicio, fin);
 });
 
 // Computed para paginación de Mi Flota
+const flotaFiltrada = computed(() => {
+  let datos = miFlota.value;
+  
+  // Filtrar por cargo si no es 'TODOS'
+  if (filtroCargoFlota.value !== 'TODOS') {
+    datos = datos.filter(usuario => usuario.cargo === filtroCargoFlota.value);
+  }
+  
+  // Ordenar por número de reparto de menor a mayor
+  const ordenados = datos.sort((a, b) => {
+    const numA = parseInt(a.numReparto) || 0;
+    const numB = parseInt(b.numReparto) || 0;
+    return numA - numB;
+  });
+  
+  console.log('Números de reparto ordenados:', ordenados.map(u => u.numReparto));
+  return ordenados;
+});
+
 const totalPagesFlota = computed(() => {
-  return Math.ceil(miFlota.value.length / itemsPerPageFlota.value);
+  return Math.ceil(flotaFiltrada.value.length / itemsPerPageFlota.value);
 });
 
 const flotaPaginada = computed(() => {
   const inicio = (currentPageFlota.value - 1) * itemsPerPageFlota.value;
   const fin = inicio + itemsPerPageFlota.value;
-  return miFlota.value.slice(inicio, fin);
+  return flotaFiltrada.value.slice(inicio, fin);
 });
 
 // Usuario actual (esto vendría de tu sistema de autenticación)
@@ -844,6 +1057,35 @@ const onPageChangedFlota = (newPage) => {
 const onItemsPerPageChangedFlota = (newItemsPerPage) => {
   itemsPerPageFlota.value = newItemsPerPage;
   currentPageFlota.value = 1; // Reset a la primera página
+};
+
+// Métodos de filtrado para Mi Flota
+const filtrarPorCargo = (cargo) => {
+  filtroCargoFlota.value = cargo;
+  currentPageFlota.value = 1; // Reset a la primera página al filtrar
+  mostrarMenuCargo.value = false;
+};
+
+const toggleMenuCargo = () => {
+  mostrarMenuCargo.value = !mostrarMenuCargo.value;
+};
+
+// Función para obtener la clase CSS del cargo
+const getCargoClass = (cargo) => {
+  const cargoClasses = {
+    'REPARTIDOR': 'bg-blue-100 text-blue-800',
+    'AYUDANTE': 'bg-green-100 text-green-800',
+    'AYUDANTE ROTATIVO': 'bg-purple-100 text-purple-800',
+    'SUPERVISOR': 'bg-orange-100 text-orange-800',
+    'REGIONAL': 'bg-red-100 text-red-800'
+  };
+  return cargoClasses[cargo] || 'bg-gray-100 text-gray-800';
+};
+
+// Función para formatear el cargo
+const formatearCargo = (cargo) => {
+  if (!cargo) return 'N/A';
+  return cargo.charAt(0).toUpperCase() + cargo.slice(1).toLowerCase();
 };
 
 // Métodos para editar líneas
@@ -897,6 +1139,12 @@ const crearSolicitud = async () => {
   try {
     loading.value = true;
     
+    // Validar que si es ROBO, tenga denuncia adjunta
+    if (form.tipoSolicitud === 'ROBO' && !form.archivoDenuncia) {
+      mostrarNotificacion('Debe adjuntar la denuncia PDF para solicitudes de robo', 'error');
+      return;
+    }
+    
     // Debug de autenticación
     console.log('Auth header:', authService.getAuthHeader());
     console.log('Is authenticated:', authService.isAuthenticated());
@@ -905,13 +1153,16 @@ const crearSolicitud = async () => {
     // Generar ID único
     form.id = `S${Date.now()}`;
     
-    // Preparar payload
+    // Preparar payload (sin el archivo)
     const payload = {
       ...form,
       motivo: form.motivoTipo === 'OTRO' ? form.motivo : `${form.motivoTipo}${form.motivo ? ' - ' + form.motivo : ''}`,
       necesitaLinea: form.tipoSolicitud === 'NUEVO_EQUIPO' ? form.necesitaLinea : false,
       estado: EstadoSolicitud.PENDIENTE
     };
+
+    // Remover archivoDenuncia del payload
+    delete payload.archivoDenuncia;
 
     // Si no es admin, la región se maneja automáticamente por el backend
     // (el backend debería usar la región del usuario autenticado)
@@ -920,7 +1171,16 @@ const crearSolicitud = async () => {
     }
     
     console.log('Creando solicitud:', payload);
-    await crearMiSolicitud(payload);
+    const solicitudCreada = await crearMiSolicitud(payload);
+    
+    // Si es ROBO y hay denuncia, adjuntarla
+    if (form.tipoSolicitud === 'ROBO' && form.archivoDenuncia) {
+      const denunciaExitosa = await adjuntarDenuncia(solicitudCreada.data.id, form.archivoDenuncia);
+      if (!denunciaExitosa) {
+        mostrarNotificacion('Solicitud creada pero hubo error al adjuntar la denuncia. Contacte al administrador.', 'error');
+        return;
+      }
+    }
     
     mostrarNotificacion('¡Solicitud creada exitosamente! Recibirás una respuesta pronto.');
     
@@ -933,7 +1193,8 @@ const crearSolicitud = async () => {
       tipoSolicitud: '',
       motivoTipo: '',
       motivo: '',
-      necesitaLinea: false
+      necesitaLinea: false,
+      archivoDenuncia: null
     };
     
     // Solo incluir región si es admin
@@ -942,6 +1203,10 @@ const crearSolicitud = async () => {
     }
     
     Object.assign(form, formReset);
+    
+    // Limpiar el input file
+    const input = document.querySelector('input[type="file"]');
+    if (input) input.value = '';
     
     // Recargar mis solicitudes
     cargarMisSolicitudes();
@@ -962,6 +1227,13 @@ const cargarMisSolicitudes = async () => {
     console.log('Cargando solicitudes de mi región...');
     console.log('Auth header:', authService.getAuthHeader());
     console.log('DEBUG: Iniciando función cargarMisSolicitudes');
+
+    // Si no hay autenticación, no intentar llamar al backend
+    if (!authService.isAuthenticated()) {
+      console.log('⛔ No autenticado: omitiendo carga de solicitudes');
+      misSolicitudes.value = [];
+      return;
+    }
     
     // Obtener todas las solicitudes y filtrar por región del usuario
     const response = await solicitudService.obtenerTodas();
@@ -1009,6 +1281,7 @@ const cargarMisSolicitudes = async () => {
     console.log('Región del usuario:', userRegion);
     console.log('Total solicitudes:', todasLasSolicitudes.length);
     console.log('Solicitudes filtradas por región:', misSolicitudes.value.length);
+    console.log('Muestra de solicitud:', misSolicitudes.value[0]);
     
     // Ordenar por fecha de creación descendente (más recientes primero)
     misSolicitudes.value.sort((a, b) => {
@@ -1072,6 +1345,95 @@ const descargarPDF = async (solicitud) => {
   }
 };
 
+// Métodos para manejo de archivo de denuncia
+const onDenunciaSelected = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    // Validar tipo de archivo
+    if (file.type !== 'application/pdf') {
+      mostrarNotificacion('Solo se permiten archivos PDF', 'error');
+      event.target.value = '';
+      return;
+    }
+    
+    // Validar tamaño (10MB máximo)
+    const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+    if (file.size > maxSize) {
+      mostrarNotificacion('El archivo es demasiado grande. Máximo 10MB', 'error');
+      event.target.value = '';
+      return;
+    }
+    
+    form.archivoDenuncia = file;
+    console.log('Archivo seleccionado:', file.name, 'Tamaño:', formatFileSize(file.size));
+  }
+};
+
+const removeDenuncia = () => {
+  form.archivoDenuncia = null;
+  // Limpiar el input file
+  const input = document.querySelector('input[type="file"]');
+  if (input) input.value = '';
+};
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const adjuntarDenuncia = async (solicitudId, archivo) => {
+  try {
+    console.log('Adjuntando denuncia a solicitud:', solicitudId);
+    await solicitudService.adjuntarDenuncia(solicitudId, archivo);
+    mostrarNotificacion('Denuncia adjuntada correctamente');
+    return true;
+  } catch (error) {
+    console.error('Error al adjuntar denuncia:', error);
+    mostrarNotificacion('Error al adjuntar la denuncia', 'error');
+    return false;
+  }
+};
+
+const descargarDenuncia = async (solicitudId) => {
+  descargandoDenuncia.value = true;
+  try {
+    console.log('Descargando denuncia de solicitud:', solicitudId);
+    const response = await solicitudService.descargarDenuncia(solicitudId);
+    
+    // Verificar que la respuesta sea válida
+    console.log('Response type:', typeof response);
+    console.log('Response data:', response.data);
+    
+    // Obtener el blob de la respuesta
+    const blob = response.data;
+    
+    // Verificar que sea un Blob válido
+    if (!(blob instanceof Blob)) {
+      throw new Error('La respuesta no es un blob válido');
+    }
+    
+    // Crear URL del blob y descargar
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `denuncia-solicitud-${solicitudId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    mostrarNotificacion('Denuncia descargada correctamente');
+  } catch (error) {
+    console.error('Error al descargar denuncia:', error);
+    mostrarNotificacion('Error al descargar la denuncia', 'error');
+  } finally {
+    descargandoDenuncia.value = false;
+  }
+};
+
 // Cargar al montar
 onMounted(() => {
   // Aquí deberías obtener el usuario actual del sistema de autenticación
@@ -1092,6 +1454,7 @@ const cargarMiFlota = async () => {
     miFlota.value = resp.data || [];
     flotaCargada.value = true;
     console.log('Mi flota cargada:', miFlota.value);
+    console.log('Cargos encontrados:', miFlota.value.map(u => u.cargo));
   } catch (error) {
     console.error('Error al cargar mi flota:', error);
     

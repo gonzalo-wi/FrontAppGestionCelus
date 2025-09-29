@@ -1,9 +1,9 @@
-import http from './http';
+import { http } from './http';
 import type { Celular } from './celularService';
 
-export type Region = 'NORTE' | 'ESTE' | 'SUR' | 'OESTE' | 'LA_PLATA' | 'NAFA' | 'LAVAZZA' | 'TALLER'| 'IMPACTO'| 'COMERCIAL' | 'GERENCIA' | 'PLANTA'| 'SISTEMAS';
+export type Region = 'NORTE' | 'ESTE' | 'SUR' | 'OESTE' | 'LA_PLATA' | 'NAFA' | 'LAVAZZA' | 'TALLER'| 'IMPACTO'| 'COMERCIAL' | 'GERENCIA' | 'PLANTA'| 'SISTEMAS' | 'RRHH' | 'ADMINISTRACION' | 'COMPRAS';
 export type Zona   = 'CIUDADELA' | 'LOMAS_DE_ZAMORA' | 'LA_PLATA';
-export type Cargo  = 'REPARTIDOR' | 'SUPERVISOR' | 'REGIONAL' | 'AYUDANTE' | 'AYUDANTE_ROTATIVO';
+export type Cargo  = 'REPARTIDOR' | 'SUPERVISOR' | 'REGIONAL' | 'AYUDANTE' | 'AYUDANTE_ROTATIVO' | 'SUPLENTE' | 'ANALISTA' | 'JEFE' | 'GERENTE';
 
 export interface Usuario {
   numReparto: string;

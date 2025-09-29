@@ -93,6 +93,12 @@
               <option value="GERENCIA">GERENCIA</option>
               <option value="PLANTA">PLANTA</option>
               <option value="SISTEMAS">SISTEMAS</option>
+              <option value="RRHH">RRHH</option>
+              <option value="ADMINISTRACION">ADMINISTRACION</option>
+              <option value="COMPRAS">COMPRAS</option>
+              <option value="RRHH">RRHH</option>
+              <option value="ADMINISTRACION">ADMINISTRACION</option>
+              <option value="COMPRAS">COMPRAS</option>
             </select>
           </div>
           <div class="space-y-2">
@@ -172,6 +178,12 @@
               <option value="GERENCIA">GERENCIA</option>
               <option value="PLANTA">PLANTA</option>
               <option value="SISTEMAS">SISTEMAS</option>
+              <option value="RRHH">RRHH</option>
+              <option value="ADMINISTRACION">ADMINISTRACION</option>
+              <option value="COMPRAS">COMPRAS</option>
+              <option value="RRHH">RRHH</option>
+              <option value="ADMINISTRACION">ADMINISTRACION</option>
+              <option value="COMPRAS">COMPRAS</option>
             </select>
           </div>
           <div class="space-y-2">
@@ -244,7 +256,7 @@
                     <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[80px]">Línea</th>
                     <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">Fecha</th>
                     <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Estado</th>
-                    <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[80px]">Acciones</th>
+                    <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Acciones</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white/90 backdrop-blur-sm divide-y divide-gray-200/50">
@@ -270,9 +282,30 @@
                     </span>
                   </td>
                   <td class="px-4 py-4 whitespace-nowrap min-w-[140px]">
-                    <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-cyan-100 to-blue-100 text-cyan-800">
-                      {{ solicitud.tipoSolicitud.replace(/_/g, ' ') }}
-                    </span>
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-cyan-100 to-blue-100 text-cyan-800">
+                        {{ solicitud.tipoSolicitud.replace(/_/g, ' ') }}
+                      </span>
+                      <!-- Indicador de denuncia para ROBO -->
+                      <div v-if="solicitud.tipoSolicitud === 'ROBO'" class="flex items-center">
+                        <span v-if="solicitud.tieneDenunciaAdjunta" 
+                              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800"
+                              title="Con denuncia PDF">
+                          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                          PDF
+                        </span>
+                        <span v-else 
+                              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800"
+                              title="Sin denuncia">
+                          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                          </svg>
+                          Sin PDF
+                        </span>
+                      </div>
+                    </div>
                   </td>
                   <td class="px-4 py-4 min-w-[200px]">
                     <div class="text-sm text-gray-700 max-w-[180px] truncate" :title="solicitud.motivo">{{ solicitud.motivo }}</div>
@@ -333,13 +366,37 @@
                       </span>
                     </div>
                   </td>
-                  <td class="px-4 py-4 whitespace-nowrap min-w-[80px]">
-                    <div class="flex items-center justify-center">
+                  <td class="px-4 py-4 whitespace-nowrap min-w-[150px]">
+                    <div class="flex items-center justify-center gap-2">
+                      <!-- Botones PDF para solicitudes ROBO con denuncia -->
+                      <button v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                              @click="verPdfDenuncia(solicitud.id)"
+                              class="p-1.5 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                              title="Ver PDF">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </button>
+                      <button v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                              @click="descargarDenuncia(solicitud.id)"
+                              :disabled="descargandoDenuncia"
+                              class="p-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50"
+                              title="Descargar PDF">
+                        <svg v-if="descargandoDenuncia" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      </button>
+                      <!-- Botón de configuración/edición para admin -->
                       <button v-if="isAdmin" 
                               @click="abrirModalEstado(solicitud)" 
-                              class="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 group" 
+                              class="p-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 group" 
                               title="Editar solicitud">
-                        <svg class="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
@@ -431,7 +488,23 @@
                 </div>
                 <div>
                   <span class="text-xs font-semibold text-gray-500 uppercase">Tipo</span>
-                  <p class="text-sm font-medium text-gray-900">{{ solicitud.tipoSolicitud.replace(/_/g, ' ') }}</p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-medium text-gray-900">{{ solicitud.tipoSolicitud.replace(/_/g, ' ') }}</p>
+                    <!-- Preview de denuncia para solicitudes ROBO -->
+                    <PdfThumbnail 
+                      v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                      :solicitud-id="solicitud.id"
+                      :nombre-archivo="solicitud.nombreArchivoDenuncia"
+                      :tiene-denuncia="solicitud.tieneDenunciaAdjunta"
+                    />
+                    <span v-else-if="solicitud.tipoSolicitud === 'ROBO'" 
+                          class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                      </svg>
+                      Sin denuncia
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <span class="text-xs font-semibold text-gray-500 uppercase">Fecha</span>
@@ -456,6 +529,30 @@
                 <button @click="iniciarEdicion(solicitud)" 
                         class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                   Editar Estado
+                </button>
+                <!-- Botón ver PDF -->
+                <button v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                        @click="verPdfDenuncia(solicitud.id)"
+                        class="p-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                        title="Ver PDF">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                </button>
+                <!-- Botón descargar denuncia -->
+                <button v-if="solicitud.tipoSolicitud === 'ROBO' && solicitud.tieneDenunciaAdjunta"
+                        @click="descargarDenuncia(solicitud.id)"
+                        :disabled="descargandoDenuncia"
+                        class="p-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50"
+                        title="Descargar PDF">
+                  <svg v-if="descargandoDenuncia" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
                 </button>
                 <button v-if="isAdmin" 
                         @click="abrirModalEstado(solicitud)" 
@@ -521,6 +618,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { solicitudService, EstadoSolicitud } from '@/services/solicitudService.ts';
+import PdfThumbnail from '@/components/PdfThumbnail.vue';
 
 const solicitudes = ref([]);
 const loading = ref(false);
@@ -687,6 +785,75 @@ const guardarEstado = async (solicitud) => {
     });
     mostrarNotificacion(`Error al actualizar estado: ${error?.response?.data?.message || error?.message || 'Error desconocido'}`, 'error');
     cancelarEdicion();
+  }
+};
+
+// Estado para descarga de denuncias
+const descargandoDenuncia = ref(false);
+
+// Función para ver PDF en nueva ventana
+const verPdfDenuncia = async (solicitudId) => {
+  try {
+    console.log('Abriendo preview de denuncia:', solicitudId);
+    const response = await solicitudService.descargarDenuncia(solicitudId);
+    
+    // Verificar que la respuesta sea válida
+    const blob = response.data;
+    
+    if (!(blob instanceof Blob)) {
+      throw new Error('La respuesta no es un blob válido');
+    }
+    
+    // Crear URL del blob y abrir en nueva ventana
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank', 'width=800,height=1000,scrollbars=yes');
+    
+    // Liberar la URL después de un tiempo para evitar memory leaks
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Error al abrir PDF:', error);
+    mostrarNotificacion('Error al abrir el PDF', 'error');
+  }
+};
+
+// Función para descargar denuncia PDF
+const descargarDenuncia = async (solicitudId) => {
+  descargandoDenuncia.value = true;
+  try {
+    console.log('Descargando denuncia de solicitud:', solicitudId);
+    const response = await solicitudService.descargarDenuncia(solicitudId);
+    
+    // Verificar que la respuesta sea válida
+    console.log('Response type:', typeof response);
+    console.log('Response data:', response.data);
+    
+    // Obtener el blob de la respuesta
+    const blob = response.data;
+    
+    // Verificar que sea un Blob válido
+    if (!(blob instanceof Blob)) {
+      throw new Error('La respuesta no es un blob válido');
+    }
+    
+    // Crear URL del blob y descargar
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `denuncia-solicitud-${solicitudId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    mostrarNotificacion('Denuncia descargada correctamente');
+  } catch (error) {
+    console.error('Error al descargar denuncia:', error);
+    mostrarNotificacion('Error al descargar la denuncia', 'error');
+  } finally {
+    descargandoDenuncia.value = false;
   }
 };
 

@@ -55,6 +55,36 @@
         </div>
       </div>
 
+      <!-- Toggle de vistas -->
+      <div class="px-4 py-2 border-b border-gray-100">
+        <div class="flex items-center justify-center">
+          <div class="flex bg-gray-100 rounded-lg p-1">
+            <button
+              @click="cambiarVista('no-leidas')"
+              :class="[
+                'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                vistaActual === 'no-leidas' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              ]"
+            >
+              No leídas ({{ alertasNoLeidas.length }})
+            </button>
+            <button
+              @click="cambiarVista('todas')"
+              :class="[
+                'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                vistaActual === 'todas' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              ]"
+            >
+              Historial
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Lista de alertas -->
       <div class="max-h-96 overflow-y-auto">
         <div v-if="loading" class="p-4 text-center">
@@ -67,7 +97,7 @@
           </div>
         </div>
 
-        <div v-else-if="alertas.length === 0" class="p-6 text-center text-gray-500">
+        <div v-else-if="alertasAMostrar.length === 0" class="p-6 text-center text-gray-500">
           <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
@@ -76,7 +106,7 @@
 
         <div v-else class="divide-y divide-gray-100">
           <div
-            v-for="alerta in alertas"
+            v-for="alerta in alertasAMostrar"
             :key="alerta.id"
             class="p-4 hover:bg-gray-50 transition-colors relative"
             :class="{ 'bg-red-50': !alerta.leida }"
@@ -178,23 +208,37 @@ const emit = defineEmits(['alertaActualizada']);
 
 // Estado reactivo
 const alertas = ref([]);
+const alertasNoLeidasSolo = ref([]);
 const loading = ref(false);
 const mostrarPanel = ref(false);
+const vistaActual = ref('no-leidas'); // 'no-leidas' o 'todas'
 
 // Auto-refresh interval
 let refreshInterval = null;
 
 // Computed
 const alertasNoLeidas = computed(() => {
-  return alertas.value.filter(alerta => !alerta.leida);
+  return alertasNoLeidasSolo.value;
+});
+
+const alertasAMostrar = computed(() => {
+  return vistaActual.value === 'no-leidas' ? alertasNoLeidasSolo.value : alertas.value;
 });
 
 // Métodos
 const cargarAlertas = async () => {
   try {
     loading.value = true;
-    const response = await alertaService.obtenerTodas();
-    alertas.value = response.data || [];
+    
+    // Cargar alertas no leídas
+    const responseNoLeidas = await alertaService.obtenerNoLeidas();
+    alertasNoLeidasSolo.value = responseNoLeidas.data || [];
+    
+    // Si estamos en vista "todas", cargar todas las alertas
+    if (vistaActual.value === 'todas') {
+      const responseTotal = await alertaService.obtenerTodas();
+      alertas.value = responseTotal.data || [];
+    }
   } catch (error) {
     console.error('Error al cargar alertas:', error);
   } finally {
@@ -213,13 +257,35 @@ const cerrarPanel = () => {
   mostrarPanel.value = false;
 };
 
+const cambiarVista = async (vista) => {
+  vistaActual.value = vista;
+  if (vista === 'todas' && alertas.value.length === 0) {
+    // Cargar todas las alertas si no están cargadas
+    try {
+      loading.value = true;
+      const response = await alertaService.obtenerTodas();
+      alertas.value = response.data || [];
+    } catch (error) {
+      console.error('Error al cargar todas las alertas:', error);
+    } finally {
+      loading.value = false;
+    }
+  }
+};
+
 const marcarComoLeida = async (alertaId) => {
   try {
     await alertaService.marcarComoLeida(alertaId);
+    
+    // Actualizar en la lista de todas las alertas
     const alerta = alertas.value.find(a => a.id === alertaId);
     if (alerta) {
       alerta.leida = true;
     }
+    
+    // Remover de la lista de alertas no leídas
+    alertasNoLeidasSolo.value = alertasNoLeidasSolo.value.filter(a => a.id !== alertaId);
+    
     emit('alertaActualizada');
   } catch (error) {
     console.error('Error al marcar alerta como leída:', error);
@@ -229,9 +295,15 @@ const marcarComoLeida = async (alertaId) => {
 const marcarTodasComoLeidas = async () => {
   try {
     await alertaService.marcarTodasComoLeidas();
+    
+    // Actualizar todas las alertas como leídas
     alertas.value.forEach(alerta => {
       alerta.leida = true;
     });
+    
+    // Limpiar la lista de alertas no leídas
+    alertasNoLeidasSolo.value = [];
+    
     emit('alertaActualizada');
   } catch (error) {
     console.error('Error al marcar todas las alertas como leídas:', error);

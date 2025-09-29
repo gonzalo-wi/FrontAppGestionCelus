@@ -35,6 +35,49 @@
       </div>
     </div>
 
+    <!-- Toggle de vistas -->
+    <div class="mb-4">
+      <div class="flex items-center justify-center">
+        <div class="flex bg-gray-100 rounded-lg p-1">
+          <button
+            @click="cambiarVista('no-leidas')"
+            :class="[
+              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+              vistaActual === 'no-leidas' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-900'
+            ]"
+          >
+            No leídas ({{ notificacionesNoLeidas }})
+          </button>
+          <button
+            @click="cambiarVista('todas')"
+            :class="[
+              'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+              vistaActual === 'todas' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-900'
+            ]"
+          >
+            Historial
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div v-if="vistaActual === 'no-leidas' && notificacionesNoLeidas > 0" class="mb-4 flex justify-center">
+      <button
+        @click="marcarTodasComoLeidas"
+        class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Marcar todas como leídas
+      </button>
+    </div>
+
     <!-- Contenido -->
     <div class="bg-white rounded-xl shadow-sm">
       <!-- Loading state -->
@@ -44,7 +87,7 @@
       </div>
 
       <!-- Sin notificaciones -->
-      <div v-else-if="notificaciones.length === 0" class="p-8 text-center">
+      <div v-else-if="notificacionesAMostrar.length === 0" class="p-8 text-center">
         <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -56,7 +99,7 @@
 
       <!-- Lista de notificaciones -->
       <div v-else class="max-h-96 overflow-y-auto">
-        <div v-for="notificacion in notificaciones" :key="notificacion.id" 
+        <div v-for="notificacion in notificacionesAMostrar" :key="notificacion.id" 
              class="p-4 hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 last:border-b-0"
              :class="{ 'bg-blue-50 border-l-4 border-l-blue-500': !notificacion.leida }">
           
@@ -130,30 +173,41 @@ import { notificacionService } from '@/services/notificacionService';
 
 // Estados reactivos
 const notificaciones = ref([]);
+const notificacionesNoLeidasSolo = ref([]);
 const loading = ref(false);
 const ultimaActualizacion = ref('');
+const vistaActual = ref('no-leidas'); // 'no-leidas' o 'todas'
 
 // Auto-refresh interval
 let refreshInterval = null;
 
 // Computed
 const notificacionesNoLeidas = computed(() => {
-  if (!Array.isArray(notificaciones.value)) {
-    return 0;
-  }
-  return notificaciones.value.filter(n => !n.leida).length;
+  return notificacionesNoLeidasSolo.value.length;
+});
+
+const notificacionesAMostrar = computed(() => {
+  return vistaActual.value === 'no-leidas' ? notificacionesNoLeidasSolo.value : notificaciones.value;
 });
 
 // Métodos
 const cargarNotificaciones = async () => {
   try {
     loading.value = true;
-    const response = await notificacionService.obtenerTodas();
     
-    // Verificar si la respuesta es HTML (error 404 o endpoint no configurado)
-    if (response && response.data && typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
-      console.warn('El endpoint /api/notificaciones devuelve HTML, usando datos mock');
-      notificaciones.value = [
+    // Cargar notificaciones no leídas
+    try {
+      const responseNoLeidas = await notificacionService.obtenerNoLeidas();
+      if (responseNoLeidas && responseNoLeidas.data && Array.isArray(responseNoLeidas.data)) {
+        notificacionesNoLeidasSolo.value = responseNoLeidas.data;
+      } else if (responseNoLeidas && Array.isArray(responseNoLeidas)) {
+        notificacionesNoLeidasSolo.value = responseNoLeidas;
+      } else {
+        notificacionesNoLeidasSolo.value = [];
+      }
+    } catch (error) {
+      console.warn('Error al cargar notificaciones no leídas, usando datos mock:', error);
+      notificacionesNoLeidasSolo.value = [
         {
           "id": 1,
           "mensaje": "Cambio de línea por norte en usuario 1",
@@ -164,44 +218,68 @@ const cargarNotificaciones = async () => {
           "numeroLinea": "1164449098"
         }
       ];
-    } else if (response && response.data && Array.isArray(response.data)) {
-      notificaciones.value = response.data;
-    } else if (response && Array.isArray(response)) {
-      notificaciones.value = response;
-    } else {
-      notificaciones.value = [];
-      console.warn('La respuesta del API no es un array válido:', response);
+    }
+    
+    // Si estamos en vista "todas", cargar todas las notificaciones
+    if (vistaActual.value === 'todas') {
+      try {
+        const responseTotal = await notificacionService.obtenerTodas();
+        if (responseTotal && responseTotal.data && Array.isArray(responseTotal.data)) {
+          notificaciones.value = responseTotal.data;
+        } else if (responseTotal && Array.isArray(responseTotal)) {
+          notificaciones.value = responseTotal;
+        } else {
+          notificaciones.value = [];
+        }
+      } catch (error) {
+        console.warn('Error al cargar todas las notificaciones:', error);
+        notificaciones.value = [...notificacionesNoLeidasSolo.value];
+      }
     }
     
     ultimaActualizacion.value = new Date().toLocaleTimeString('es-ES');
   } catch (error) {
-    console.error('Error al cargar notificaciones:', error);
-    // En caso de error, usar datos mock para mostrar funcionalidad
-    notificaciones.value = [
-      {
-        "id": 1,
-        "mensaje": "Cambio de línea por norte en usuario 1",
-        "fecha": "2025-09-16T14:37:33",
-        "leida": false,
-        "usuarioQueModifico": "norte",
-        "usuarioModificado": "1",
-        "numeroLinea": "1164449098"
-      }
-    ];
+    console.error('Error general al cargar notificaciones:', error);
   } finally {
     loading.value = false;
+  }
+};
+
+const cambiarVista = async (vista) => {
+  vistaActual.value = vista;
+  if (vista === 'todas' && notificaciones.value.length === 0) {
+    // Cargar todas las notificaciones si no están cargadas
+    try {
+      loading.value = true;
+      const response = await notificacionService.obtenerTodas();
+      if (response && response.data && Array.isArray(response.data)) {
+        notificaciones.value = response.data;
+      } else if (response && Array.isArray(response)) {
+        notificaciones.value = response;
+      } else {
+        notificaciones.value = [];
+      }
+    } catch (error) {
+      console.error('Error al cargar todas las notificaciones:', error);
+    } finally {
+      loading.value = false;
+    }
   }
 };
 
 const marcarComoLeida = async (notificacionId) => {
   try {
     await notificacionService.marcarComoLeida(notificacionId);
-    if (Array.isArray(notificaciones.value)) {
-      const notificacion = notificaciones.value.find(n => n.id === notificacionId);
-      if (notificacion) {
-        notificacion.leida = true;
-      }
+    
+    // Actualizar en la lista de todas las notificaciones
+    const notificacion = notificaciones.value.find(n => n.id === notificacionId);
+    if (notificacion) {
+      notificacion.leida = true;
     }
+    
+    // Remover de la lista de notificaciones no leídas
+    notificacionesNoLeidasSolo.value = notificacionesNoLeidasSolo.value.filter(n => n.id !== notificacionId);
+    
   } catch (error) {
     console.error('Error al marcar notificación como leída:', error);
   }
@@ -210,11 +288,15 @@ const marcarComoLeida = async (notificacionId) => {
 const marcarTodasComoLeidas = async () => {
   try {
     await notificacionService.marcarTodasComoLeidas();
-    if (Array.isArray(notificaciones.value)) {
-      notificaciones.value.forEach(notificacion => {
-        notificacion.leida = true;
-      });
-    }
+    
+    // Actualizar todas las notificaciones como leídas
+    notificaciones.value.forEach(notificacion => {
+      notificacion.leida = true;
+    });
+    
+    // Limpiar la lista de notificaciones no leídas
+    notificacionesNoLeidasSolo.value = [];
+    
   } catch (error) {
     console.error('Error al marcar todas las notificaciones como leídas:', error);
   }
@@ -227,9 +309,11 @@ const eliminarNotificacion = async (notificacionId) => {
   
   try {
     await notificacionService.eliminar(notificacionId);
-    if (Array.isArray(notificaciones.value)) {
-      notificaciones.value = notificaciones.value.filter(n => n.id !== notificacionId);
-    }
+    
+    // Eliminar de ambas listas
+    notificaciones.value = notificaciones.value.filter(n => n.id !== notificacionId);
+    notificacionesNoLeidasSolo.value = notificacionesNoLeidasSolo.value.filter(n => n.id !== notificacionId);
+    
   } catch (error) {
     console.error('Error al eliminar notificación:', error);
   }

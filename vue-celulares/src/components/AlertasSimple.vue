@@ -37,19 +37,50 @@
         </button>
       </div>
 
+      <!-- Toggle de vistas -->
+      <div class="px-4 py-2 border-b border-gray-100">
+        <div class="flex items-center justify-center">
+          <div class="flex bg-gray-100 rounded-lg p-1">
+            <button
+              @click="cambiarVista('no-leidas')"
+              :class="[
+                'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                vistaActual === 'no-leidas' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              ]"
+            >
+              Pendientes
+            </button>
+            <button
+              @click="cambiarVista('todas')"
+              :class="[
+                'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                vistaActual === 'todas' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              ]"
+            >
+              Historial
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Contenido -->
       <div class="max-h-96 overflow-y-auto">
         <div v-if="loading" class="p-4 text-center text-gray-500">
           Cargando alertas...
         </div>
         
-        <div v-else-if="alertas.length === 0" class="p-4 text-center text-gray-500">
-          No hay alertas pendientes
+        <div v-else-if="alertasAMostrar.length === 0" class="p-4 text-center text-gray-500">
+          <span v-if="vistaActual === 'no-leidas'">No hay alertas pendientes</span>
+          <span v-else>No hay alertas en el historial</span>
         </div>
         
         <div v-else>
           <div
-            v-for="alerta in alertas"
+            v-for="alerta in alertasAMostrar"
             :key="alerta.id"
             class="p-4 border-b border-gray-100 hover:bg-gray-50"
             :class="{ 'bg-red-50': !alerta.leida }"
@@ -103,12 +134,17 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 // Estados
 const alertas = ref([])
+const todasLasAlertas = ref([])
 const loading = ref(false)
 const showPanel = ref(false)
+const vistaActual = ref('no-leidas') // 'no-leidas' o 'todas'
 let intervalId = null
 
 // Computed
 const alertasCount = computed(() => alertas.value.filter(a => !a.leida).length)
+const alertasAMostrar = computed(() => {
+  return vistaActual.value === 'no-leidas' ? alertas.value : todasLasAlertas.value
+})
 
 // Métodos
 const togglePanel = () => {
@@ -121,7 +157,7 @@ const togglePanel = () => {
 const cargarAlertas = async () => {
   try {
     loading.value = true
-    const response = await fetch('/api/alertas', {
+    const response = await fetch('/api/alertas/no-leidas', {
       headers: {
         'Authorization': 'Basic ' + localStorage.getItem('auth')
       }
@@ -138,6 +174,35 @@ const cargarAlertas = async () => {
   }
 }
 
+const cargarTodasLasAlertas = async () => {
+  try {
+    loading.value = true
+    const response = await fetch('/api/alertas', {
+      headers: {
+        'Authorization': 'Basic ' + localStorage.getItem('auth')
+      }
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      todasLasAlertas.value = data || []
+    }
+  } catch (error) {
+    console.error('Error cargando todas las alertas:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const cambiarVista = async (vista) => {
+  vistaActual.value = vista
+  if (vista === 'todas' && todasLasAlertas.value.length === 0) {
+    await cargarTodasLasAlertas()
+  } else if (vista === 'no-leidas') {
+    await cargarAlertas()
+  }
+}
+
 const marcarLeida = async (alertaId) => {
   try {
     const response = await fetch(`/api/alertas/${alertaId}/marcar-leida`, {
@@ -148,8 +213,14 @@ const marcarLeida = async (alertaId) => {
     })
     
     if (response.ok) {
-      const alerta = alertas.value.find(a => a.id === alertaId)
-      if (alerta) alerta.leida = true
+      // Actualizar en todas las alertas si está cargada
+      const alertaEnTodas = todasLasAlertas.value.find(a => a.id === alertaId)
+      if (alertaEnTodas) {
+        alertaEnTodas.leida = true
+      }
+      
+      // Recargar alertas no leídas para que desaparezca de la vista pendientes
+      await cargarAlertas()
     }
   } catch (error) {
     console.error('Error marcando alerta:', error)
@@ -166,7 +237,9 @@ const eliminar = async (alertaId) => {
     })
     
     if (response.ok) {
+      // Eliminar de ambas listas
       alertas.value = alertas.value.filter(a => a.id !== alertaId)
+      todasLasAlertas.value = todasLasAlertas.value.filter(a => a.id !== alertaId)
     }
   } catch (error) {
     console.error('Error eliminando alerta:', error)

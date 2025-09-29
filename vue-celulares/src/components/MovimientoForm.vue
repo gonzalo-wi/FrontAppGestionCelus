@@ -179,41 +179,113 @@ const shouldShowUsuarioDropdownAbove = ref(false);
 
 // Computed para filtrar celulares
 const filteredCelulares = computed(() => {
-  if (!celularSearch.value || celularSearch.value.length < 1) {
-    return props.celulares.slice(0, 10); // Mostrar los primeros 10 si no hay búsqueda
+  console.log('🔍 Filtrando celulares - Búsqueda:', celularSearch.value);
+  
+  if (!celularSearch.value || celularSearch.value.trim().length === 0) {
+    console.log('📋 Sin búsqueda, mostrando primeros 20 ordenados');
+    // Mostrar primeros 20 ordenados por código interno numéricamente
+    return props.celulares
+      .slice()
+      .sort((a, b) => {
+        const numA = parseInt(a.codigoInterno) || 0;
+        const numB = parseInt(b.codigoInterno) || 0;
+        return numA - numB;
+      })
+      .slice(0, 20);
   }
   
-  const searchTerm = celularSearch.value.toLowerCase();
-  return props.celulares.filter(celular => {
-    return (
-      celular.codigoInterno?.toLowerCase().includes(searchTerm) ||
-      celular.numeroSerie?.toString().includes(searchTerm) ||
-      celular.marca?.toLowerCase().includes(searchTerm) ||
-      celular.modelo?.toLowerCase().includes(searchTerm)
+  const searchTerm = celularSearch.value.trim().toLowerCase();
+  console.log('🎯 Término de búsqueda:', searchTerm);
+  
+  const filtered = props.celulares.filter(celular => {
+    const codigoInterno = celular.codigoInterno?.toString().toLowerCase() || '';
+    const numeroSerie = celular.numeroSerie?.toString().toLowerCase() || '';
+    const marca = celular.marca?.toLowerCase() || '';
+    const modelo = celular.modelo?.toLowerCase() || '';
+    
+    const matches = (
+      codigoInterno.includes(searchTerm) ||
+      numeroSerie.includes(searchTerm) ||
+      marca.includes(searchTerm) ||
+      modelo.includes(searchTerm)
     );
-  }).slice(0, 10); // Limitar a 10 resultados
+    
+    if (matches) {
+      console.log('✅ Coincidencia encontrada:', {
+        codigoInterno: celular.codigoInterno,
+        marca: celular.marca,
+        modelo: celular.modelo
+      });
+    }
+    
+    return matches;
+  })
+  .sort((a, b) => {
+    // Ordenar por coincidencia exacta primero, luego numéricamente
+    const aExact = a.codigoInterno?.toString().toLowerCase() === searchTerm;
+    const bExact = b.codigoInterno?.toString().toLowerCase() === searchTerm;
+    
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    
+    // Si ambos o ninguno es exacto, ordenar numéricamente
+    const numA = parseInt(a.codigoInterno) || 0;
+    const numB = parseInt(b.codigoInterno) || 0;
+    return numA - numB;
+  })
+  .slice(0, 20);
+  
+  console.log('📊 Resultados filtrados:', filtered.length);
+  return filtered;
 });
 
 // Computed para filtrar usuarios
 const filteredUsuarios = computed(() => {
-  if (!usuarioSearch.value || usuarioSearch.value.length < 1) {
+  if (!usuarioSearch.value || usuarioSearch.value.trim().length === 0) {
     return props.usuarios.slice(0, 10); // Mostrar los primeros 10 si no hay búsqueda
   }
   
-  const searchTerm = usuarioSearch.value.toLowerCase();
-  return props.usuarios.filter(usuario => {
+  const searchTerm = usuarioSearch.value.trim().toLowerCase();
+  const filtered = props.usuarios.filter(usuario => {
+    const numReparto = usuario.numReparto?.toString().toLowerCase() || '';
+    const region = usuario.region?.toLowerCase() || '';
+    const nombre = usuario.nombre?.toLowerCase() || '';
+    const zona = usuario.zona?.toLowerCase() || '';
+    
     return (
-      usuario.numReparto?.toLowerCase().includes(searchTerm) ||
-      usuario.region?.toLowerCase().includes(searchTerm) ||
-      usuario.nombre?.toLowerCase().includes(searchTerm)
+      numReparto.includes(searchTerm) ||
+      region.includes(searchTerm) ||
+      nombre.includes(searchTerm) ||
+      zona.includes(searchTerm) ||
+      // Búsqueda exacta por número
+      numReparto === searchTerm
     );
-  }).slice(0, 10); // Limitar a 10 resultados
+  }).slice(0, 15); // Aumentar a 15 resultados
+  
+  // Ordenar resultados: coincidencias exactas primero
+  return filtered.sort((a, b) => {
+    const aNumReparto = a.numReparto?.toString().toLowerCase() || '';
+    const bNumReparto = b.numReparto?.toString().toLowerCase() || '';
+    
+    if (aNumReparto === searchTerm && bNumReparto !== searchTerm) return -1;
+    if (bNumReparto === searchTerm && aNumReparto !== searchTerm) return 1;
+    if (aNumReparto.startsWith(searchTerm) && !bNumReparto.startsWith(searchTerm)) return -1;
+    if (bNumReparto.startsWith(searchTerm) && !aNumReparto.startsWith(searchTerm)) return 1;
+    
+    return 0;
+  });
 });
 
 // Métodos para manejo de celular
 const onCelularSearch = () => {
   selectedCelular.value = null;
   showCelularSuggestions.value = true;
+  
+  // Debug logs
+  console.log('🔍 Búsqueda de celular:', celularSearch.value);
+  console.log('📱 Total celulares disponibles:', props.celulares.length);
+  console.log('🎯 Celulares filtrados:', filteredCelulares.value.length);
+  console.log('📋 Primeros 5 resultados:', filteredCelulares.value.slice(0, 5));
 };
 
 const selectCelular = (celular) => {
@@ -233,12 +305,20 @@ const onUsuarioSearch = () => {
   selectedUsuario.value = null;
   showUsuarioSuggestions.value = true;
   checkDropdownPosition();
+  
+  // Debug logs para usuarios
+  console.log('🔍 Búsqueda de usuario:', usuarioSearch.value);
+  console.log('👥 Total usuarios disponibles:', props.usuarios.length);
+  console.log('🎯 Usuarios filtrados:', filteredUsuarios.value.length);
+  console.log('📋 Primeros 5 resultados:', filteredUsuarios.value.slice(0, 5));
 };
 
 const selectUsuario = (usuario) => {
   selectedUsuario.value = usuario;
-  usuarioSearch.value = `${usuario.numReparto} - ${usuario.region}`;
+  usuarioSearch.value = usuario.numReparto?.toString() || '';
   showUsuarioSuggestions.value = false;
+  
+  console.log('👤 Usuario seleccionado:', usuario);
 };
 
 const hideUsuarioSuggestions = () => {

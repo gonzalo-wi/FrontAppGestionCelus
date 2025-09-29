@@ -20,6 +20,7 @@
                     @change="cargarDatosPorRegion"
                     class="bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition-all duration-200">
               <option value="">Todas las regiones</option>
+              <option value="COMERCIAL">Comercial (Agrupado)</option>
               <option value="NORTE">Norte</option>
               <option value="SUR">Sur</option>
               <option value="ESTE">Este</option>
@@ -34,6 +35,21 @@
               </svg>
               Actualizar
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div v-if="mensajeExito" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-3xl p-6 mb-8 shadow-2xl">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-white/20 rounded-xl">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-lg">¡Exportación Exitosa!</h3>
+            <p class="opacity-90">{{ mensajeExito }}</p>
           </div>
         </div>
       </div>
@@ -258,7 +274,7 @@
           </div>
         </div>
 
-        <!-- Ranking de Celulares Rotos por Región -->
+        <!-- Ranking de Celulares Rotos por Región (existente) -->
         <div class="bg-white/30 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 mb-8">
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
@@ -314,7 +330,7 @@
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-600">Celulares Rotos:</span>
-                  <span class="font-bold text-red-600">{{ region.solicitudesPorRotura }}</span>
+                  <span class="font-bold text-red-600">{{ region.totalCelularesRotos || 0 }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-600">Promedio por Usuario:</span>
@@ -372,7 +388,52 @@
           </div>
           <h2 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Exportar Datos</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Filtros de exportación -->
+        <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-4 mb-6 border border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+            </svg>
+            Filtros de Exportación
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
+              <input 
+                type="date" 
+                v-model="filtrosExportacion.fechaDesde"
+                class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
+              <input 
+                type="date" 
+                v-model="filtrosExportacion.fechaHasta"
+                class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Región</label>
+              <select 
+                v-model="filtrosExportacion.region"
+                class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Todas las regiones</option>
+                <option value="COMERCIAL">Comercial (Agrupado)</option>
+                <option value="NORTE">Norte</option>
+                <option value="SUR">Sur</option>
+                <option value="ESTE">Este</option>
+                <option value="OESTE">Oeste</option>
+                <option value="LA_PLATA">La Plata</option>
+                <option value="NAFA">NAFA</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <button
             @click="exportarEstadisticas"
             class="group relative bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
@@ -404,8 +465,18 @@
           </button>
           
           <button
+            @click="exportarRepartosRoturas"
+            class="group relative bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
+          >
+            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            Repartos
+          </button>
+          
+          <button
             @click="exportarCompleto"
-            class="group relative bg-gradient-to-r from-red-500 to-pink-600 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
+            class="group relative bg-gradient-to-r from-gray-700 to-slate-800 text-white px-6 py-4 rounded-2xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3"
           >
             <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -517,8 +588,10 @@ import {
 import { Line, Bar } from 'vue-chartjs';
 import { 
   estadisticasService, 
+  agruparRegionesComerciales,
   type EstadisticasResumen, 
-  type EstadisticasRegion
+  type EstadisticasRegion,
+  type RepartoRotura
 } from '@/services/estadisticasService';
 import { excelService } from '@/services/excelService';
 
@@ -536,10 +609,20 @@ ChartJS.register(
 // Estados reactivos
 const estadisticas = ref<EstadisticasResumen | null>(null);
 const estadisticasRegiones = ref<EstadisticasRegion[]>([]);
+const repartosRoturas = ref<RepartoRotura[]>([]);
 const regionSeleccionada = ref<string>('');
 const cargando = ref(false);
+const cargandoRepartos = ref(false);
 const error = ref<string>('');
+const mensajeExito = ref<string>('');
 const mostrarDetalleMensual = ref(false); // Collapsed por defecto
+
+// Filtros de exportación
+const filtrosExportacion = ref({
+  fechaDesde: '',
+  fechaHasta: '',
+  region: ''
+});
 
 // Computed properties
 const regionesUrgentes = computed(() => 
@@ -683,6 +766,10 @@ const cargarEstadisticasRegiones = async () => {
     regionesData = regionesData.filter(region => region.region !== 'SISTEMAS');
     console.log('Estadísticas de regiones después de filtro:', regionesData);
     
+    // Aplicar agrupación comercial
+    regionesData = agruparRegionesComerciales(regionesData);
+    console.log('Estadísticas de regiones después de agrupación comercial:', regionesData);
+    
     estadisticasRegiones.value = regionesData;
   } catch (err: any) {
     console.error('Error al cargar estadísticas por región:', err);
@@ -726,8 +813,23 @@ const cargarDatosPorRegion = async () => {
 const cargarTodosDatos = async () => {
   await Promise.all([
     cargarEstadisticas(),
-    cargarEstadisticasRegiones()
+    cargarEstadisticasRegiones(),
+    cargarRepartosRoturas()
   ]);
+};
+
+const cargarRepartosRoturas = async () => {
+  cargandoRepartos.value = true;
+  try {
+    repartosRoturas.value = await estadisticasService.obtenerRepartosConMasRoturas();
+    console.log('Repartos con roturas cargados:', repartosRoturas.value);
+  } catch (err: any) {
+    console.error('Error al cargar repartos con roturas:', err);
+    error.value = err.message || 'Error al cargar repartos con roturas';
+    repartosRoturas.value = [];
+  } finally {
+    cargandoRepartos.value = false;
+  }
 };
 
 const verDetalleRegion = (region: string) => {
@@ -736,42 +838,99 @@ const verDetalleRegion = (region: string) => {
 };
 
 const exportarEstadisticas = async () => {
-  if (!estadisticas.value?.estadisticasMensuales) {
-    error.value = 'No hay datos de estadísticas para exportar';
-    return;
-  }
-  
   try {
-    const fechaHoy = new Date().toISOString().split('T')[0];
-    excelService.exportarEstadisticas(
-      estadisticas.value.estadisticasMensuales,
-      `estadisticas_mensuales_${fechaHoy}.xlsx`
-    );
-  } catch (err) {
-    console.error('Error al exportar estadísticas:', err);
-    error.value = 'Error al exportar estadísticas';
+    // Usar el nuevo método de exportación completa que maneja múltiples hojas
+    await excelService.exportarEstadisticasCompletas();
+    
+    mostrarExito('📊 Estadísticas completas exportadas correctamente');
+  } catch (error: any) {
+    console.error('Error al exportar estadísticas completas:', error);
+    mostrarError(error.message || 'Error al exportar las estadísticas');
   }
 };
 
 const exportarMovimientos = async () => {
   try {
-    const movimientos = await estadisticasService.obtenerMovimientosDetalle();
+    // Primero intentar con filtros, si falla usar método básico
+    let movimientos;
+    const hayFiltros = Object.values(filtrosExportacion.value).some(v => v);
+    
+    if (hayFiltros) {
+      try {
+        movimientos = await estadisticasService.exportarMovimientosConFiltros(
+          filtrosExportacion.value.fechaDesde || undefined,
+          filtrosExportacion.value.fechaHasta || undefined,
+          filtrosExportacion.value.region || undefined
+        );
+      } catch (err) {
+        console.warn('Filtros no disponibles, usando exportación básica');
+        movimientos = await estadisticasService.obtenerMovimientosDetalle();
+      }
+    } else {
+      movimientos = await estadisticasService.obtenerMovimientosDetalle();
+    }
+    
     const fechaHoy = new Date().toISOString().split('T')[0];
-    excelService.exportarMovimientos(movimientos, `movimientos_${fechaHoy}.xlsx`);
+    
+    if (hayFiltros) {
+      // Usar exportación con filtros si hay filtros aplicados
+      excelService.exportarMovimientosConFiltros(
+        movimientos, 
+        filtrosExportacion.value,
+        `movimientos_filtrados_${fechaHoy}.xlsx`
+      );
+    } else {
+      // Usar exportación normal si no hay filtros
+      excelService.exportarMovimientos(movimientos, `movimientos_${fechaHoy}.xlsx`);
+    }
+    
+    mostrarExito(`📱 ${movimientos.length} movimientos exportados correctamente`);
   } catch (err) {
     console.error('Error al exportar movimientos:', err);
-    error.value = 'Error al exportar movimientos';
+    mostrarError('Error al exportar movimientos');
   }
 };
 
 const exportarSolicitudes = async () => {
   try {
-    const solicitudes = await estadisticasService.obtenerSolicitudesDetalle();
+    // Primero intentar con filtros, si falla usar método básico
+    let solicitudes;
+    const hayFiltros = Object.values(filtrosExportacion.value).some(v => v);
+    
+    if (hayFiltros) {
+      try {
+        solicitudes = await estadisticasService.exportarSolicitudesConFiltros(
+          filtrosExportacion.value.fechaDesde || undefined,
+          filtrosExportacion.value.fechaHasta || undefined,
+          filtrosExportacion.value.region || undefined,
+          undefined // estado
+        );
+      } catch (err) {
+        console.warn('Filtros no disponibles, usando exportación básica');
+        solicitudes = await estadisticasService.obtenerSolicitudesDetalle();
+      }
+    } else {
+      solicitudes = await estadisticasService.obtenerSolicitudesDetalle();
+    }
+    
     const fechaHoy = new Date().toISOString().split('T')[0];
-    excelService.exportarSolicitudes(solicitudes, `solicitudes_${fechaHoy}.xlsx`);
+    
+    if (hayFiltros) {
+      // Usar exportación con filtros si hay filtros aplicados
+      excelService.exportarSolicitudesConFiltros(
+        solicitudes, 
+        filtrosExportacion.value,
+        `solicitudes_filtradas_${fechaHoy}.xlsx`
+      );
+    } else {
+      // Usar exportación normal si no hay filtros
+      excelService.exportarSolicitudes(solicitudes, `solicitudes_${fechaHoy}.xlsx`);
+    }
+    
+    mostrarExito(`📋 ${solicitudes.length} solicitudes exportadas correctamente`);
   } catch (err) {
     console.error('Error al exportar solicitudes:', err);
-    error.value = 'Error al exportar solicitudes';
+    mostrarError('Error al exportar solicitudes');
   }
 };
 
@@ -782,21 +941,67 @@ const exportarCompleto = async () => {
   }
   
   try {
-    const [movimientos, solicitudes] = await Promise.all([
-      estadisticasService.obtenerMovimientosDetalle(),
-      estadisticasService.obtenerSolicitudesDetalle()
-    ]);
+    const hayFiltros = Object.values(filtrosExportacion.value).some(v => v);
+    let movimientos, solicitudes;
+    
+    // Obtener datos con o sin filtros
+    if (hayFiltros) {
+      try {
+        [movimientos, solicitudes] = await Promise.all([
+          estadisticasService.exportarMovimientosConFiltros(
+            filtrosExportacion.value.fechaDesde || undefined,
+            filtrosExportacion.value.fechaHasta || undefined,
+            filtrosExportacion.value.region || undefined
+          ),
+          estadisticasService.exportarSolicitudesConFiltros(
+            filtrosExportacion.value.fechaDesde || undefined,
+            filtrosExportacion.value.fechaHasta || undefined,
+            filtrosExportacion.value.region || undefined,
+            undefined
+          )
+        ]);
+      } catch (err) {
+        console.warn('Filtros no disponibles, usando exportación básica');
+        [movimientos, solicitudes] = await Promise.all([
+          estadisticasService.obtenerMovimientosDetalle(),
+          estadisticasService.obtenerSolicitudesDetalle()
+        ]);
+      }
+    } else {
+      [movimientos, solicitudes] = await Promise.all([
+        estadisticasService.obtenerMovimientosDetalle(),
+        estadisticasService.obtenerSolicitudesDetalle()
+      ]);
+    }
     
     const fechaHoy = new Date().toISOString().split('T')[0];
+    const nombreArchivo = hayFiltros 
+      ? `reporte_completo_filtrado_${fechaHoy}.xlsx`
+      : `reporte_completo_${fechaHoy}.xlsx`;
+      
     excelService.exportarCompleto(
       estadisticas.value.estadisticasMensuales,
       movimientos,
       solicitudes,
-      `reporte_completo_${fechaHoy}.xlsx`
+      nombreArchivo
     );
+    
+    mostrarExito('📦 Reporte completo exportado correctamente');
   } catch (err) {
     console.error('Error al exportar reporte completo:', err);
-    error.value = 'Error al exportar reporte completo';
+    mostrarError('Error al exportar reporte completo');
+  }
+};
+
+const exportarRepartosRoturas = async () => {
+  try {
+    // Usar el método de exportación completa que incluye los repartos con roturas
+    await excelService.exportarEstadisticasCompletas();
+    
+    mostrarExito('🏆 Estadísticas completas con ranking de repartos exportadas correctamente');
+  } catch (err: any) {
+    console.error('Error al exportar repartos con roturas:', err);
+    mostrarError(err.message || 'Error al exportar repartos con roturas');
   }
 };
 
@@ -804,4 +1009,24 @@ const exportarCompleto = async () => {
 onMounted(() => {
   cargarTodosDatos();
 });
+
+// Función auxiliar para limpiar mensajes
+const limpiarMensajes = () => {
+  setTimeout(() => {
+    error.value = '';
+    mensajeExito.value = '';
+  }, 5000);
+};
+
+const mostrarExito = (mensaje: string) => {
+  mensajeExito.value = mensaje;
+  error.value = '';
+  limpiarMensajes();
+};
+
+const mostrarError = (mensajeError: string) => {
+  error.value = mensajeError;
+  mensajeExito.value = '';
+  limpiarMensajes();
+};
 </script>

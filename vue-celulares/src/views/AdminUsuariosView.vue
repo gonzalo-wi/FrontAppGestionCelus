@@ -52,7 +52,7 @@
             </thead>
             <tbody class="bg-white/90 divide-y divide-gray-200/50">
               <tr 
-                v-for="usuario in usuarios" 
+                v-for="usuario in usuariosOrdenados" 
                 :key="usuario.username"
                 class="hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 transition-all duration-200"
               >
@@ -115,7 +115,7 @@
         <!-- Cards Mobile -->
         <div class="lg:hidden space-y-4">
           <div 
-            v-for="usuario in usuarios" 
+            v-for="usuario in usuariosOrdenados" 
             :key="usuario.username"
             class="bg-white/90 rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300"
           >
@@ -254,6 +254,9 @@
                 <option value="GERENCIA">GERENCIA</option>
                 <option value="PLANTA">PLANTA</option>
                 <option value="SISTEMAS">SISTEMAS</option>
+                <option value="RRHH">RRHH</option>
+                <option value="ADMINISTRACION">ADMINISTRACION</option>
+                <option value="COMPRAS">COMPRAS</option>
               </select>
             </div>
           </div>
@@ -331,7 +334,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { 
   usuariosService, 
   type UsuarioSistema, 
@@ -341,6 +344,31 @@ import {
 
 // Estado reactivo
 const usuarios = ref<UsuarioSistema[]>([]);
+
+// Usuarios ordenados por número de usuario de menor a mayor, luego alfabéticamente
+const usuariosOrdenados = computed(() => {
+  return [...usuarios.value].sort((a, b) => {
+    // Extraer números del username
+    const matchA = a.username.match(/\d+/);
+    const matchB = b.username.match(/\d+/);
+    
+    const numA = matchA ? parseInt(matchA[0]) : -1;
+    const numB = matchB ? parseInt(matchB[0]) : -1;
+    
+    // Si ambos tienen números válidos, ordenar numéricamente
+    if (numA >= 0 && numB >= 0) {
+      return numA - numB;
+    }
+    
+    // Si solo uno tiene número, el que tiene número va primero
+    if (numA >= 0 && numB < 0) return -1;
+    if (numA < 0 && numB >= 0) return 1;
+    
+    // Si ninguno tiene números, ordenar alfabéticamente
+    return a.username.localeCompare(b.username);
+  });
+});
+
 const cargando = ref(false);
 const guardando = ref(false);
 const error = ref<string | null>(null);

@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celulares-frontend
+    ports:
+      - "192.168.0.55:5173:5173"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - celulares-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`192.168.0.55`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+
+networks:
+  celulares-network:
+    driver: bridge
+    external: false

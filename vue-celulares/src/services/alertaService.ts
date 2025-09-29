@@ -43,7 +43,7 @@ export const alertaService = {
    */
   async obtenerNoLeidas() {
     try {
-      const response = await http.get('/alertas?leida=false');
+      const response = await http.get('/alertas/no-leidas');
       return response;
     } catch (error) {
       console.error('Error al obtener alertas no leídas:', error);

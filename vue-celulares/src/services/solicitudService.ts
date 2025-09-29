@@ -22,7 +22,7 @@ export const Region = {
 export type RegionType = typeof Region[keyof typeof Region];
 
 // Tipos
-export type TipoSolicitud = 'CAMBIO_POR_ROTURA' | 'NUEVO_EQUIPO';
+export type TipoSolicitud = 'CAMBIO_POR_ROTURA' | 'NUEVO_EQUIPO' | 'ROBO';
 export const EstadoSolicitud = {
   PENDIENTE: 'PENDIENTE',
   EN_PROCESO: 'EN_PROCESO',
@@ -40,6 +40,8 @@ export interface Solicitud {
   motivo: string;
   necesitaLinea: boolean;
   estado?: EstadoSolicitudType;
+  tieneDenunciaAdjunta?: boolean;
+  nombreArchivoDenuncia?: string;
 }
 
 const API_URL = '/api/solicitudes';
@@ -63,6 +65,25 @@ export const solicitudService = {
   // Obtener solicitudes de un usuario
   obtenerPorUsuario(usuario: string) {
   return api.get<Solicitud[]>(`${API_URL}/usuario/${usuario}`);
+  },
+
+  // Adjuntar denuncia PDF para solicitudes de ROBO
+  adjuntarDenuncia(id: string, archivo: File) {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    
+    return api.post(`${API_URL}/${id}/denuncia`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Descargar denuncia PDF
+  descargarDenuncia(id: string) {
+    return api.get(`${API_URL}/${id}/denuncia`, {
+      responseType: 'blob',
+    });
   }
 };
 

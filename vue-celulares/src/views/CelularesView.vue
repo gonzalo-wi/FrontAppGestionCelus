@@ -4,6 +4,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { celularService } from '@/services/celularService.ts';
 import { movimientoService } from '@/services/movimientoService.ts';
 import { usuarioService } from '@/services/usuarioService.ts';
+import { excelService } from '@/services/excelService.ts';
 import DataTable from '@/components/DataTable.vue';
 import Modal from '@/components/Modal.vue';
 import CelularForm from '@/components/CelularForm.vue';
@@ -32,6 +33,14 @@ const itemsPerPageMovimientos = ref(25);
 const showDeleteModal = ref(false);
 const selectedCelular = ref(null);
 const editingCelular = ref(null);
+const celularFormRef = ref(null);
+
+// Notificación específica para movimientos
+const movimientoNotification = reactive({
+  show: false,
+  type: 'success',
+  message: ''
+});
 
 // Estados para edición de movimientos
 const showEditMovimientoModal = ref(false);
@@ -50,10 +59,20 @@ const movimientoFilters = ref({});
 const reporteForm = reactive({
   codigoInterno: '',
   numReparto: '',
-  motivoRotura: ''
+  motivoRotura: '',
+  fechaReporte: new Date().toISOString().split('T')[0] // Fecha actual por defecto en formato YYYY-MM-DD
 });
 
 const resultadoReporte = ref(null);
+
+// Variables para consulta de reportes de roturas
+const reportesRoturas = ref([]);
+const loadingReportes = ref(false);
+const filtrosReportes = reactive({
+  numReparto: '',
+  fechaInicio: '',
+  fechaFin: ''
+});
 
 // Notificaciones
 const notification = reactive({
@@ -88,7 +107,11 @@ const celularesFiltrados = computed(() => {
   }
   
   return celulares.value.filter(celular => {
-    const { marca, estado, usuario, asignado } = filters.value;
+    const { codigoInterno, marca, estado, usuario, asignado } = filters.value;
+    
+    if (codigoInterno && !celular.codigoInterno?.toString().toLowerCase().includes(codigoInterno.toLowerCase())) {
+      return false;
+    }
     
     if (marca && !celular.marca.toLowerCase().includes(marca.toLowerCase())) {
       return false;
@@ -201,6 +224,15 @@ const showNotification = (message, type = 'success') => {
   }, 3000);
 };
 
+const showMovimientoNotification = (message, type = 'success') => {
+  movimientoNotification.message = message;
+  movimientoNotification.type = type;
+  movimientoNotification.show = true;
+  setTimeout(() => {
+    movimientoNotification.show = false;
+  }, 4000);
+};
+
 const cargarDatos = async () => {
   await Promise.all([
     cargarCelulares(),
@@ -252,6 +284,10 @@ const guardarCelular = async (celularData) => {
       // Crear nuevo celular
       await celularService.crearCelular(celularData);
       showNotification('Celular creado exitosamente');
+      // Limpiar formulario después de crear exitosamente
+      if (celularFormRef.value) {
+        celularFormRef.value.resetForm();
+      }
     }
     
     editingCelular.value = null;
@@ -294,10 +330,10 @@ const guardarMovimiento = async (movimientoData) => {
   try {
     loadingMovimiento.value = true;
     await movimientoService.crear(movimientoData);
-    showNotification('Movimiento creado exitosamente');
+    showMovimientoNotification('✅ Movimiento creado exitosamente');
     cargarMovimientos();
   } catch (error) {
-    showNotification('Error al crear movimiento', 'error');
+    showMovimientoNotification('❌ Error al crear movimiento', 'error');
     console.error('Error:', error);
   } finally {
     loadingMovimiento.value = false;
@@ -386,7 +422,8 @@ const reportarCelularRoto = async () => {
     const reporte = {
       codigoInterno: reporteForm.codigoInterno.trim(),
       numReparto: reporteForm.numReparto.trim(),
-      motivoRotura: reporteForm.motivoRotura.trim()
+      motivoRotura: reporteForm.motivoRotura.trim(),
+      fechaReporte: reporteForm.fechaReporte // Formato YYYY-MM-DD
     };
 
     console.log('📤 Enviando reporte:', reporte);
@@ -426,6 +463,7 @@ const reportarCelularRoto = async () => {
       reporteForm.codigoInterno = '';
       reporteForm.numReparto = '';
       reporteForm.motivoRotura = '';
+      reporteForm.fechaReporte = new Date().toISOString().split('T')[0]; // Resetear a fecha actual
       
       showNotification(
         resultado.exitoReemplazo 
@@ -442,6 +480,148 @@ const reportarCelularRoto = async () => {
     showNotification(`Error al reportar celular roto: ${error.message}`, 'error');
   } finally {
     loadingReporte.value = false;
+  }
+};
+
+// Funciones para consultar reportes de roturas
+const consultarTodosLosReportes = async () => {
+  loadingReportes.value = true;
+  try {
+    const response = await fetch('http://localhost:8080/api/movimientos/reportes-rotura', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Basic ' + btoa('admin:admin123')
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    reportesRoturas.value = await response.json();
+    showNotification(`${reportesRoturas.value.length} reportes encontrados`, 'success');
+  } catch (error) {
+    console.error('Error al consultar reportes:', error);
+    showNotification(`Error al consultar reportes: ${error.message}`, 'error');
+    reportesRoturas.value = [];
+  } finally {
+    loadingReportes.value = false;
+  }
+};
+
+const consultarReportesPorUsuario = async () => {
+  if (!filtrosReportes.numReparto.trim()) {
+    showNotification('Ingrese un número de reparto', 'warning');
+    return;
+  }
+
+  loadingReportes.value = true;
+  try {
+    const response = await fetch(`http://localhost:8080/api/movimientos/reportes-rotura/usuario/${filtrosReportes.numReparto.trim()}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Basic ' + btoa('admin:admin123')
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    reportesRoturas.value = await response.json();
+    showNotification(`${reportesRoturas.value.length} reportes encontrados para usuario ${filtrosReportes.numReparto}`, 'success');
+  } catch (error) {
+    console.error('Error al consultar reportes por usuario:', error);
+    showNotification(`Error al consultar reportes: ${error.message}`, 'error');
+    reportesRoturas.value = [];
+  } finally {
+    loadingReportes.value = false;
+  }
+};
+
+const consultarReportesPorFecha = async () => {
+  if (!filtrosReportes.fechaInicio || !filtrosReportes.fechaFin) {
+    showNotification('Ingrese fecha de inicio y fin', 'warning');
+    return;
+  }
+
+  loadingReportes.value = true;
+  try {
+    const response = await fetch(`http://localhost:8080/api/movimientos/reportes-rotura/fecha?fechaInicio=${filtrosReportes.fechaInicio}&fechaFin=${filtrosReportes.fechaFin}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Basic ' + btoa('admin:admin123')
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    reportesRoturas.value = await response.json();
+    showNotification(`${reportesRoturas.value.length} reportes encontrados entre ${filtrosReportes.fechaInicio} y ${filtrosReportes.fechaFin}`, 'success');
+  } catch (error) {
+    console.error('Error al consultar reportes por fecha:', error);
+    showNotification(`Error al consultar reportes: ${error.message}`, 'error');
+    reportesRoturas.value = [];
+  } finally {
+    loadingReportes.value = false;
+  }
+};
+
+const limpiarFiltrosReportes = () => {
+  filtrosReportes.numReparto = '';
+  filtrosReportes.fechaInicio = '';
+  filtrosReportes.fechaFin = '';
+  reportesRoturas.value = [];
+};
+
+const exportarReportesRoturas = async () => {
+  if (reportesRoturas.value.length === 0) {
+    showNotification('No hay reportes para exportar', 'warning');
+    return;
+  }
+
+  try {
+    // Preparar datos para Excel
+    const datosExcel = reportesRoturas.value.map(reporte => ({
+      'ID': reporte.id,
+      'Fecha': reporte.fecha,
+      'Código Celular': reporte.celular?.codigoInterno || '',
+      'Marca': reporte.celular?.marca || '',
+      'Modelo': reporte.celular?.modelo || '',
+      'Número Serie': reporte.celular?.numeroSerie || '',
+      'Estado Celular': reporte.celular?.estado || '',
+      'Roturas': reporte.celular?.cantRoturas || 0,
+      'Templado': reporte.celular?.tieneTemplado ? 'Sí' : 'No',
+      'Funda': reporte.celular?.tieneFunda ? 'Sí' : 'No',
+      'Usuario Reparto': reporte.usuario?.numReparto || '',
+      'Zona': reporte.usuario?.zona || '',
+      'Región': reporte.usuario?.region || '',
+      'Cargo': reporte.usuario?.cargo || '',
+      'Línea': reporte.usuario?.numeroLinea || '',
+      'Celulares Rotos Usuario': reporte.usuario?.cantCelularesRotos || 0,
+      'Descripción': reporte.descripcion || '',
+      'Tipo Movimiento': reporte.tipo || ''
+    }));
+
+    // Generar nombre del archivo basado en filtros aplicados
+    let nombreArchivo = 'reportes_roturas';
+    if (filtrosReportes.numReparto) {
+      nombreArchivo += `_usuario_${filtrosReportes.numReparto}`;
+    }
+    if (filtrosReportes.fechaInicio && filtrosReportes.fechaFin) {
+      nombreArchivo += `_${filtrosReportes.fechaInicio}_${filtrosReportes.fechaFin}`;
+    }
+    nombreArchivo += `_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    // Usar el servicio de Excel existente
+    excelService.exportarReportesRoturas(datosExcel, nombreArchivo);
+    
+    showNotification(`${reportesRoturas.value.length} reportes exportados correctamente`, 'success');
+  } catch (error) {
+    console.error('Error al exportar reportes:', error);
+    showNotification(`Error al exportar reportes: ${error.message}`, 'error');
   }
 };
 
@@ -566,19 +746,20 @@ onMounted(() => {
 
       <!-- Contenido de las pestañas -->
       <div v-if="activeTab === 'celulares'" class="space-y-8">
-        <!-- Filtros modernos -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
-          <CelularFilters @filter="aplicarFiltros" />
-        </div>
-        
         <!-- Formulario de celular moderno -->
         <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
           <CelularForm 
+            ref="celularFormRef"
             :celular="editingCelular"
             :loading="loadingCelular"
             @save="guardarCelular"
             @cancel="cancelarEdicion"
           />
+        </div>
+        
+        <!-- Filtros modernos -->
+        <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
+          <CelularFilters @filter="aplicarFiltros" />
         </div>
 
         <!-- Tabla de celulares moderna -->
@@ -826,6 +1007,35 @@ onMounted(() => {
           />
         </div>
 
+        <!-- Notificación específica para movimientos -->
+        <div v-if="movimientoNotification.show" 
+             :class="[
+               'p-4 rounded-2xl flex items-center justify-between shadow-xl transform transition-all duration-300 animate-pulse',
+               movimientoNotification.type === 'success' 
+                 ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
+                 : 'bg-gradient-to-r from-red-400 to-pink-500 text-white'
+             ]">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-white/20 rounded-xl">
+              <svg v-if="movimientoNotification.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-lg">{{ movimientoNotification.message }}</p>
+              <p class="text-sm opacity-90">El formulario se ha limpiado automáticamente</p>
+            </div>
+          </div>
+          <button @click="movimientoNotification.show = false" class="p-2 hover:bg-white/20 rounded-xl transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
         <!-- Tabla de movimientos moderna -->
         <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
           <div class="flex items-center justify-between mb-6">
@@ -1067,6 +1277,21 @@ onMounted(() => {
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
+                Fecha del Reporte *
+              </label>
+              <input 
+                v-model="reporteForm.fechaReporte"
+                type="date" 
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              />
+              <p class="mt-1 text-sm text-gray-500">
+                Fecha en que se reportó la rotura del celular
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
                 Motivo de la Rotura *
               </label>
               <textarea 
@@ -1130,6 +1355,200 @@ onMounted(() => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Nueva sección: Consultar Reportes de Roturas -->
+      <div class="bg-white/30 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="p-3 bg-gradient-to-br from-blue-600 to-cyan-700 rounded-2xl">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-700 to-cyan-700 bg-clip-text text-transparent">
+            📋 Consultar Reportes de Roturas
+          </h3>
+        </div>
+
+        <!-- Filtros de consulta -->
+        <div class="space-y-6 mb-8">
+          <!-- Filtro por usuario -->
+          <div class="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+            <h4 class="font-semibold text-gray-800 mb-4">🔍 Buscar por Usuario</h4>
+            <div class="flex gap-4">
+              <input 
+                v-model="filtrosReportes.numReparto"
+                type="text" 
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Número de reparto (ej: 9)"
+              />
+              <button
+                @click="consultarReportesPorUsuario"
+                :disabled="loadingReportes"
+                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg v-if="loadingReportes" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                {{ loadingReportes ? 'Buscando...' : 'Buscar' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Filtro por fechas -->
+          <div class="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+            <h4 class="font-semibold text-gray-800 mb-4">📅 Buscar por Rango de Fechas</h4>
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <label class="block text-sm text-gray-600 mb-2">Fecha Inicio</label>
+                <input 
+                  v-model="filtrosReportes.fechaInicio"
+                  type="date" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div class="flex-1">
+                <label class="block text-sm text-gray-600 mb-2">Fecha Fin</label>
+                <input 
+                  v-model="filtrosReportes.fechaFin"
+                  type="date" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div class="flex flex-col justify-end">
+                <button
+                  @click="consultarReportesPorFecha"
+                  :disabled="loadingReportes"
+                  class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <svg v-if="loadingReportes" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  {{ loadingReportes ? 'Buscando...' : 'Buscar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="flex gap-4">
+            <button
+              @click="consultarTodosLosReportes"
+              :disabled="loadingReportes"
+              class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg v-if="loadingReportes" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+              </svg>
+              {{ loadingReportes ? 'Cargando...' : 'Ver Todos los Reportes' }}
+            </button>
+            <button
+              @click="exportarReportesRoturas"
+              :disabled="reportesRoturas.length === 0"
+              class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Exportar Excel
+            </button>
+            <button
+              @click="limpiarFiltrosReportes"
+              class="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla de resultados -->
+        <div v-if="reportesRoturas.length > 0" class="bg-white/50 backdrop-blur-sm rounded-2xl border border-white/30 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50/70">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white/30 divide-y divide-gray-200">
+                <tr v-for="reporte in reportesRoturas" :key="reporte.id" class="hover:bg-white/40 transition-colors duration-200">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ reporte.id }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ reporte.fecha }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <div>
+                      <div class="font-medium">{{ reporte.celular?.marca }} {{ reporte.celular?.modelo }}</div>
+                      <div class="text-xs text-gray-500">
+                        Código: {{ reporte.celular?.codigoInterno }} | Serie: {{ reporte.celular?.numeroSerie }}
+                      </div>
+                      <div class="text-xs">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                              :class="{
+                                'bg-red-100 text-red-800': reporte.celular?.estado === 'ROTO',
+                                'bg-green-100 text-green-800': reporte.celular?.estado === 'DISPONIBLE',
+                                'bg-blue-100 text-blue-800': reporte.celular?.estado === 'ASIGNADO'
+                              }">
+                          {{ reporte.celular?.estado }}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <div>
+                      <div class="font-medium">{{ reporte.usuario?.numReparto }}</div>
+                      <div class="text-xs text-gray-500">
+                        {{ reporte.usuario?.zona }} - {{ reporte.usuario?.region }}
+                      </div>
+                      <div class="text-xs text-gray-500">{{ reporte.usuario?.cargo }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" :title="reporte.descripcion">
+                    {{ reporte.descripcion }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          :class="{
+                            'bg-red-100 text-red-800': reporte.tipo === 'DEVOLUCION',
+                            'bg-blue-100 text-blue-800': reporte.tipo === 'ASIGNACION'
+                          }">
+                      {{ reporte.tipo }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Resumen -->
+          <div class="bg-gray-50/70 px-6 py-3 border-t border-gray-200">
+            <p class="text-sm text-gray-600">
+              <span class="font-medium">Total de reportes encontrados:</span> {{ reportesRoturas.length }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div v-else-if="!loadingReportes && (filtrosReportes.numReparto || filtrosReportes.fechaInicio || filtrosReportes.fechaFin)" class="text-center py-12 text-gray-500">
+          <div class="text-6xl mb-4">📋</div>
+          <p class="text-lg font-medium">No se encontraron reportes con los filtros aplicados</p>
+          <p class="text-sm mt-2">Intenta con otros criterios de búsqueda</p>
         </div>
       </div>
 

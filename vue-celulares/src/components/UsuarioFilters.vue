@@ -63,6 +63,16 @@
           <option value="OESTE">OESTE</option>
           <option value="NAFA">NAFA</option>
           <option value="LA_PLATA">LA PLATA</option>
+          <option value="LAVAZZA">LAVAZZA</option>
+          <option value="TALLER">TALLER</option>
+          <option value="IMPACTO">IMPACTO</option>
+          <option value="COMERCIAL">COMERCIAL</option>
+          <option value="GERENCIA">GERENCIA</option>
+          <option value="PLANTA">PLANTA</option>
+          <option value="SISTEMAS">SISTEMAS</option>
+          <option value="RRHH">RRHH</option>
+          <option value="ADMINISTRACION">ADMINISTRACION</option>
+          <option value="COMPRAS">COMPRAS</option>
         </select>
       </div>
 
@@ -80,6 +90,10 @@
           <option value="REGIONAL">REGIONAL</option>
           <option value="AYUDANTE">AYUDANTE</option>
           <option value="AYUDANTE_ROTATIVO">AYUDANTE ROTATIVO</option>
+          <option value="SUPLENTE">SUPLENTE</option>
+          <option value="ANALISTA">ANALISTA</option>
+          <option value="JEFE">JEFE</option>
+          <option value="GERENTE">GERENTE</option>
           <option value="SIN_CARGO">Sin cargo</option>
         </select>
       </div>

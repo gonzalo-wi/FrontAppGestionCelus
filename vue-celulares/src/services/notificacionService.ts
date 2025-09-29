@@ -29,7 +29,7 @@ export const notificacionService = {
    */
   async obtenerNoLeidas() {
     try {
-      const response = await http.get('/api/notificaciones?leida=false');
+      const response = await http.get('/api/notificaciones/no-leidas');
       return response;
     } catch (error) {
       console.error('Error al obtener notificaciones no leídas:', error);
@@ -42,7 +42,7 @@ export const notificacionService = {
    */
   async marcarComoLeida(notificacionId: number) {
     try {
-      const response = await http.put(`/api/notificaciones/${notificacionId}/marcar-leida`);
+      const response = await http.put(`/api/notificaciones/${notificacionId}/leida`);
       return response;
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);

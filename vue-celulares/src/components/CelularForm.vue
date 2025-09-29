@@ -201,4 +201,7 @@ watch(() => props.celular, (newCelular) => {
     resetForm();
   }
 }, { immediate: true });
+
+// Exponer métodos para el componente padre
+defineExpose({ resetForm });
 </script>

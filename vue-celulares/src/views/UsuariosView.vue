@@ -29,13 +29,13 @@ const itemsPerPage = ref(25);
 
 // Opciones para enums
 const regiones = [
-  'NORTE', 'SUR', 'ESTE', 'OESTE', 'NAFA', 'LA_PLATA', 'LAVAZZA', 'IMPACTO', 'PLANTA', 'SISTEMAS', 'TALLER', 'GERENCIA', 'COMERCIAL'
+  'NORTE', 'SUR', 'ESTE', 'OESTE', 'NAFA', 'LA_PLATA', 'LAVAZZA', 'IMPACTO', 'PLANTA', 'SISTEMAS', 'TALLER', 'GERENCIA', 'COMERCIAL', 'RRHH', 'ADMINISTRACION', 'COMPRAS'
 ];
 const zonas = [
   'CIUDADELA', 'LOMAS_DE_ZAMORA', 'LA_PLATA'
 ];
 const cargos = [
-  'REPARTIDOR', 'SUPERVISOR', 'REGIONAL', 'AYUDANTE', 'AYUDANTE_ROTATIVO'
+  'REPARTIDOR', 'SUPERVISOR', 'REGIONAL', 'AYUDANTE', 'AYUDANTE_ROTATIVO', 'SUPLENTE', 'ANALISTA', 'JEFE', 'GERENTE'
 ];
 
 // Formulario
@@ -190,10 +190,40 @@ const aplicarFiltros = (filtrosActivos = null) => {
   // Ordenamiento
   switch (filtros.ordenar) {
     case 'numReparto_asc':
-      resultado.sort((a, b) => (a.numReparto || '').localeCompare(b.numReparto || ''));
+      resultado.sort((a, b) => {
+        const numA = parseInt(a.numReparto?.match(/\d+/)?.[0] || '0') || 0;
+        const numB = parseInt(b.numReparto?.match(/\d+/)?.[0] || '0') || 0;
+        
+        // Si ambos tienen números válidos, ordenar numéricamente
+        if (numA > 0 && numB > 0) {
+          return numA - numB;
+        }
+        
+        // Si solo uno tiene número, el que tiene número va primero
+        if (numA > 0 && numB === 0) return -1;
+        if (numA === 0 && numB > 0) return 1;
+        
+        // Si ninguno tiene números, ordenar alfabéticamente
+        return (a.numReparto || '').localeCompare(b.numReparto || '');
+      });
       break;
     case 'numReparto_desc':
-      resultado.sort((a, b) => (b.numReparto || '').localeCompare(a.numReparto || ''));
+      resultado.sort((a, b) => {
+        const numA = parseInt(a.numReparto?.match(/\d+/)?.[0] || '0') || 0;
+        const numB = parseInt(b.numReparto?.match(/\d+/)?.[0] || '0') || 0;
+        
+        // Si ambos tienen números válidos, ordenar numéricamente descendente
+        if (numA > 0 && numB > 0) {
+          return numB - numA;
+        }
+        
+        // Si solo uno tiene número, el que tiene número va primero
+        if (numA > 0 && numB === 0) return -1;
+        if (numA === 0 && numB > 0) return 1;
+        
+        // Si ninguno tiene números, ordenar alfabéticamente descendente
+        return (b.numReparto || '').localeCompare(a.numReparto || '');
+      });
       break;
     case 'region':
       resultado.sort((a, b) => (a.region || '').localeCompare(b.region || ''));
@@ -208,6 +238,24 @@ const aplicarFiltros = (filtrosActivos = null) => {
         return cargoA.localeCompare(cargoB);
       });
       break;
+    default:
+      // Ordenamiento por defecto: numReparto ascendente numéricamente, luego alfabéticamente
+      resultado.sort((a, b) => {
+        const numA = parseInt(a.numReparto?.match(/\d+/)?.[0] || '0') || 0;
+        const numB = parseInt(b.numReparto?.match(/\d+/)?.[0] || '0') || 0;
+        
+        // Si ambos tienen números válidos, ordenar numéricamente
+        if (numA > 0 && numB > 0) {
+          return numA - numB;
+        }
+        
+        // Si solo uno tiene número, el que tiene número va primero
+        if (numA > 0 && numB === 0) return -1;
+        if (numA === 0 && numB > 0) return 1;
+        
+        // Si ninguno tiene números (ambos son alfabéticos), ordenar alfabéticamente
+        return (a.numReparto || '').localeCompare(b.numReparto || '');
+      });
   }
 
   console.log('✅ Filtros aplicados. Resultados:', resultado.length);
@@ -252,6 +300,11 @@ const guardarUsuario = async () => {
       showNotification('Usuario actualizado exitosamente');
     } else {
       console.log('➕ Creando nuevo usuario');
+      console.log('🌐 URL completa:', `${window.location.origin}/api/usuarios`);
+      console.log('📋 Headers que se enviarán:', {
+        'Authorization': 'Basic ' + localStorage.getItem('auth'),
+        'Content-Type': 'application/json'
+      });
       const response = await usuarioService.crear(usuario);
       console.log('✅ Respuesta de creación:', response);
       showNotification('Usuario creado exitosamente');
@@ -263,7 +316,22 @@ const guardarUsuario = async () => {
     console.error('❌ Error al guardar usuario:', error);
     console.error('❌ Error response:', error.response?.data);
     console.error('❌ Error status:', error.response?.status);
-    showNotification('Error al guardar usuario: ' + (error.response?.data?.message || error.message), 'error');
+    console.error('❌ Error headers:', error.response?.headers);
+    console.error('❌ Request config:', error.config);
+    
+    let errorMessage = 'Error al guardar usuario: ';
+    if (error.response?.status === 403) {
+      errorMessage += 'No tienes permisos para realizar esta acción. ';
+      if (error.response?.data?.message) {
+        errorMessage += error.response.data.message;
+      } else {
+        errorMessage += 'Verifica que el backend esté corriendo y configurado correctamente para CORS.';
+      }
+    } else {
+      errorMessage += (error.response?.data?.message || error.message);
+    }
+    
+    showNotification(errorMessage, 'error');
   }
 };
 
