@@ -588,7 +588,7 @@ import {
 import { Line, Bar } from 'vue-chartjs';
 import { 
   estadisticasService, 
-  agruparRegionesComerciales,
+  // agruparRegionesComerciales, // Comentado para mantener regiones separadas
   type EstadisticasResumen, 
   type EstadisticasRegion,
   type RepartoRotura
@@ -766,9 +766,8 @@ const cargarEstadisticasRegiones = async () => {
     regionesData = regionesData.filter(region => region.region !== 'SISTEMAS');
     console.log('Estadísticas de regiones después de filtro:', regionesData);
     
-    // Aplicar agrupación comercial
-    regionesData = agruparRegionesComerciales(regionesData);
-    console.log('Estadísticas de regiones después de agrupación comercial:', regionesData);
+    // Mantener regiones separadas (no agrupar en comercial)
+    console.log('Estadísticas de regiones manteniendo separación:', regionesData);
     
     estadisticasRegiones.value = regionesData;
   } catch (err: any) {
