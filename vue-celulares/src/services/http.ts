@@ -4,7 +4,7 @@ import router from '@/router';
 
 // Axios compartido para toda la app
 export const http = axios.create({
-  // Usamos el proxy de Vite: /api -> http://localhost:8080
+  // Usamos el proxy de Vite: /api -> http://localhost:8082
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

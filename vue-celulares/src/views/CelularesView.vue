@@ -5,6 +5,7 @@ import { celularService } from '@/services/celularService.ts';
 import { movimientoService } from '@/services/movimientoService.ts';
 import { usuarioService } from '@/services/usuarioService.ts';
 import { excelService } from '@/services/excelService.ts';
+import http from '@/services/http.ts';
 import DataTable from '@/components/DataTable.vue';
 import Modal from '@/components/Modal.vue';
 import CelularForm from '@/components/CelularForm.vue';
@@ -428,33 +429,11 @@ const reportarCelularRoto = async () => {
 
     console.log('📤 Enviando reporte:', reporte);
 
-    const response = await fetch('http://localhost:8080/api/celulares/gestion/reportar-roto', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa('admin:admin123')
-      },
-      body: JSON.stringify(reporte)
-    });
+    const response = await http.post('/api/celulares/gestion/reportar-roto', reporte);
 
     console.log('📥 Respuesta del servidor:', response.status, response.statusText);
 
-    if (!response.ok) {
-      // Intentar obtener el mensaje de error del servidor
-      let errorMessage = 'Error al reportar celular roto';
-      try {
-        const errorData = await response.json();
-        console.log('❌ Error del servidor:', errorData);
-        errorMessage = errorData.message || errorData.error || errorMessage;
-      } catch (e) {
-        console.log('❌ No se pudo parsear el error del servidor');
-        const errorText = await response.text();
-        console.log('❌ Respuesta de error como texto:', errorText);
-      }
-      throw new Error(`${errorMessage} (${response.status})`);
-    }
-
-    const resultado = await response.json();
+    const resultado = response.data;
     console.log('✅ Resultado exitoso:', resultado);
     resultadoReporte.value = resultado;
     
@@ -487,18 +466,9 @@ const reportarCelularRoto = async () => {
 const consultarTodosLosReportes = async () => {
   loadingReportes.value = true;
   try {
-    const response = await fetch('http://localhost:8080/api/movimientos/reportes-rotura', {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Basic ' + btoa('admin:admin123')
-      }
-    });
+    const response = await http.get('/api/movimientos/reportes-rotura');
 
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-
-    reportesRoturas.value = await response.json();
+    reportesRoturas.value = response.data;
     showNotification(`${reportesRoturas.value.length} reportes encontrados`, 'success');
   } catch (error) {
     console.error('Error al consultar reportes:', error);
@@ -517,18 +487,9 @@ const consultarReportesPorUsuario = async () => {
 
   loadingReportes.value = true;
   try {
-    const response = await fetch(`http://localhost:8080/api/movimientos/reportes-rotura/usuario/${filtrosReportes.numReparto.trim()}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Basic ' + btoa('admin:admin123')
-      }
-    });
+    const response = await http.get(`/api/movimientos/reportes-rotura/usuario/${filtrosReportes.numReparto.trim()}`);
 
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-
-    reportesRoturas.value = await response.json();
+    reportesRoturas.value = response.data;
     showNotification(`${reportesRoturas.value.length} reportes encontrados para usuario ${filtrosReportes.numReparto}`, 'success');
   } catch (error) {
     console.error('Error al consultar reportes por usuario:', error);
@@ -547,18 +508,9 @@ const consultarReportesPorFecha = async () => {
 
   loadingReportes.value = true;
   try {
-    const response = await fetch(`http://localhost:8080/api/movimientos/reportes-rotura/fecha?fechaInicio=${filtrosReportes.fechaInicio}&fechaFin=${filtrosReportes.fechaFin}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Basic ' + btoa('admin:admin123')
-      }
-    });
+    const response = await http.get(`/api/movimientos/reportes-rotura/fecha?fechaInicio=${filtrosReportes.fechaInicio}&fechaFin=${filtrosReportes.fechaFin}`);
 
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-
-    reportesRoturas.value = await response.json();
+    reportesRoturas.value = response.data;
     showNotification(`${reportesRoturas.value.length} reportes encontrados entre ${filtrosReportes.fechaInicio} y ${filtrosReportes.fechaFin}`, 'success');
   } catch (error) {
     console.error('Error al consultar reportes por fecha:', error);
