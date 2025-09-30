@@ -658,12 +658,19 @@ const paginaActual = ref(1);
 const solicitudesPorPagina = 10;
 
 const solicitudesFiltradas = computed(() => {
-  return solicitudes.value.filter(s => {
-    if (filtros.region && s.region !== filtros.region) return false;
-    if (filtros.tipoSolicitud && s.tipoSolicitud !== filtros.tipoSolicitud) return false;
-    if (filtros.usuario && !s.usuario.toLowerCase().includes(filtros.usuario.toLowerCase())) return false;
-    return true;
-  });
+  return solicitudes.value
+    .filter(s => {
+      if (filtros.region && s.region !== filtros.region) return false;
+      if (filtros.tipoSolicitud && s.tipoSolicitud !== filtros.tipoSolicitud) return false;
+      if (filtros.usuario && !s.usuario.toLowerCase().includes(filtros.usuario.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Ordenar por fecha de la más reciente a la más antigua
+      const fechaA = new Date(a.fecha);
+      const fechaB = new Date(b.fecha);
+      return fechaB - fechaA;
+    });
 });
 
 const totalPaginas = computed(() => {
