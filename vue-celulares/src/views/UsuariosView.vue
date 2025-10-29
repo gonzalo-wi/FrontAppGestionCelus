@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
 import { usuarioService } from '@/services/usuarioService.ts';
@@ -29,7 +28,8 @@ const itemsPerPage = ref(25);
 
 // Opciones para enums
 const regiones = [
-  'NORTE', 'SUR', 'ESTE', 'OESTE', 'NAFA', 'LA_PLATA', 'LAVAZZA', 'IMPACTO', 'PLANTA', 'SISTEMAS', 'TALLER', 'GERENCIA', 'COMERCIAL', 'RRHH', 'ADMINISTRACION', 'COMPRAS'
+  'NORTE', 'SUR', 'ESTE', 'OESTE', 'NAFA', 'LA_PLATA', 'LAVAZZA', 'IMPACTO', 'PLANTA', 'SISTEMAS', 'TALLER', 'GERENCIA', 'COMERCIAL', 'RRHH', 'ADMINISTRACION', 'COMPRAS',
+  'PROMOCION', 'GASTRONOMIA'
 ];
 const zonas = [
   'CIUDADELA', 'LOMAS_DE_ZAMORA', 'LA_PLATA'
@@ -199,8 +199,8 @@ const aplicarFiltros = (filtrosActivos = null) => {
           return numA - numB;
         }
         
-        // Si solo uno tiene número, el que tiene número va primero
-        if (numA > 0 && numB === 0) return -1;
+  // Si solo uno tiene número, el que tiene número va primero
+  if (numA > 0 && numB === 0) return -1;
         if (numA === 0 && numB > 0) return 1;
         
         // Si ninguno tiene números, ordenar alfabéticamente

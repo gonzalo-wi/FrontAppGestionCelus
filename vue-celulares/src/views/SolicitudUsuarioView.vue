@@ -567,6 +567,42 @@
                     ]">
               Regional
             </button>
+            <button @click="filtrarPorCargo('SUPLENTE')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'SUPLENTE'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Suplentes
+            </button>
+            <button @click="filtrarPorCargo('ANALISTA')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'ANALISTA'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Analistas
+            </button>
+            <button @click="filtrarPorCargo('JEFE')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'JEFE'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Jefes
+            </button>
+            <button @click="filtrarPorCargo('GERENTE')"
+                    :class="[
+                      'px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200',
+                      filtroCargoFlota === 'GERENTE'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'bg-white/70 text-gray-700 hover:bg-white border border-gray-200/50'
+                    ]">
+              Gerentes
+            </button>
           </div>
         </div>
 
@@ -1075,9 +1111,13 @@ const getCargoClass = (cargo) => {
   const cargoClasses = {
     'REPARTIDOR': 'bg-blue-100 text-blue-800',
     'AYUDANTE': 'bg-green-100 text-green-800',
-    'AYUDANTE ROTATIVO': 'bg-purple-100 text-purple-800',
+    'AYUDANTE_ROTATIVO': 'bg-purple-100 text-purple-800',
     'SUPERVISOR': 'bg-orange-100 text-orange-800',
-    'REGIONAL': 'bg-red-100 text-red-800'
+    'REGIONAL': 'bg-red-100 text-red-800',
+    'SUPLENTE': 'bg-yellow-100 text-yellow-800',
+    'ANALISTA': 'bg-indigo-100 text-indigo-800',
+    'JEFE': 'bg-rose-100 text-rose-800',
+    'GERENTE': 'bg-emerald-100 text-emerald-800'
   };
   return cargoClasses[cargo] || 'bg-gray-100 text-gray-800';
 };

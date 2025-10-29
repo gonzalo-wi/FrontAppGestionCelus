@@ -108,9 +108,13 @@ const celularesFiltrados = computed(() => {
   }
   
   return celulares.value.filter(celular => {
-    const { codigoInterno, marca, estado, usuario, asignado } = filters.value;
+    const { codigoInterno, codigoApp, marca, estado, usuario, asignado } = filters.value;
     
     if (codigoInterno && !celular.codigoInterno?.toString().toLowerCase().includes(codigoInterno.toLowerCase())) {
+      return false;
+    }
+    
+    if (codigoApp && !celular.codigoDeAplicacion?.toString().toLowerCase().includes(codigoApp.toLowerCase())) {
       return false;
     }
     

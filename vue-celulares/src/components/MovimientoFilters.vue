@@ -178,6 +178,8 @@
           <option value="OESTE">OESTE</option>
           <option value="NAFA">NAFA</option>
           <option value="LA_PLATA">LA PLATA</option>
+          <option value="PROMOCION">PROMOCION</option>
+          <option value="GASTRONOMIA">GASTRONOMIA</option>
         </select>
       </div>
 
