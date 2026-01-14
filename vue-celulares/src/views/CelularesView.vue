@@ -76,11 +76,8 @@ const codigosDropdownRef = ref(null);
 const usuariosDropdownRef = ref(null);
 
 const codigosFiltrados = computed(() => {
-  console.log('🔍 Filtrando códigos - Búsqueda:', reporteForm.codigoInterno);
-  console.log('📱 Total celulares disponibles:', celulares.value.length);
   
   if (!reporteForm.codigoInterno || reporteForm.codigoInterno.trim().length === 0) {
-    console.log('📋 Sin búsqueda, mostrando primeros 20 ordenados');
     const result = celulares.value
       .slice()
       .sort((a, b) => {
@@ -93,7 +90,6 @@ const codigosFiltrados = computed(() => {
   }
   
   const searchTerm = reporteForm.codigoInterno.trim().toLowerCase();
-  console.log('🎯 Término de búsqueda:', searchTerm);
   
   const filtered = celulares.value.filter(c => {
     const codigoInterno = c.codigoInterno?.toString().toLowerCase() || '';
@@ -106,18 +102,8 @@ const codigosFiltrados = computed(() => {
       modelo.startsWith(searchTerm)
     );
     
-    if (matches) {
-      console.log('✅ Coincidencia encontrada:', {
-        codigoInterno: c.codigoInterno,
-        marca: c.marca,
-        modelo: c.modelo
-      });
-    }
-    
     return matches;
   });
-  
-  console.log('📊 Total resultados filtrados:', filtered.length);
   
   return filtered.sort((a, b) => {
     const aExact = a.codigoInterno?.toString().toLowerCase() === searchTerm;
@@ -132,16 +118,12 @@ const codigosFiltrados = computed(() => {
   }).slice(0, 20);
 });
 const usuariosFiltrados = computed(() => {
-  console.log('🔍 Filtrando usuarios - Búsqueda:', reporteForm.numReparto);
-  console.log('👥 Total usuarios disponibles:', usuarios.value.length);
   
   if (!reporteForm.numReparto || reporteForm.numReparto.trim().length === 0) {
-    console.log('📋 Sin búsqueda, mostrando primeros 10');
     return usuarios.value.slice(0, 10);
   }
   
   const searchTerm = reporteForm.numReparto.trim().toLowerCase();
-  console.log('🎯 Término de búsqueda:', searchTerm);
   
   const filtered = usuarios.value.filter(u => {
     const numReparto = u.numReparto?.toString().toLowerCase() || '';
@@ -156,19 +138,8 @@ const usuariosFiltrados = computed(() => {
       region.startsWith(searchTerm)
     );
     
-    if (matches) {
-      console.log('✅ Coincidencia encontrada:', {
-        numReparto: u.numReparto,
-        nombre: u.nombre,
-        apellido: u.apellido,
-        region: u.region
-      });
-    }
-    
     return matches;
   });
-  
-  console.log('📊 Total resultados filtrados:', filtered.length);
   
   return filtered.sort((a, b) => {
     const aNumReparto = a.numReparto?.toString().toLowerCase() || '';
@@ -395,7 +366,6 @@ const cargarCelulares = async () => {
       ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
       : 'Error al cargar celulares. Verifica la conexión con el servidor.';
     showNotification(mensaje, 'error');
-    console.error('❌ Error cargando celulares:', { status, mensaje: error.message });
   } finally {
     loading.value = false;
   }
@@ -404,20 +374,16 @@ const cargarCelulares = async () => {
 const cargarMovimientos = async () => {
   try {
     const response = await movimientoService.obtenerTodos();
-    console.log('📦 Respuesta movimientos completa:', response.data);
     
     // El backend puede devolver un array directo o una respuesta paginada con 'content'
     let movimientosData = [];
     if (Array.isArray(response.data)) {
       movimientosData = response.data;
       totalMovimientos.value = response.data.length;
-      console.log('📊 Array directo - Total movimientos:', totalMovimientos.value);
     } else if (response.data?.content && Array.isArray(response.data.content)) {
       movimientosData = response.data.content;
       totalMovimientos.value = response.data.totalElements || response.data.content.length;
-      console.log('📊 Respuesta paginada - Total movimientos:', totalMovimientos.value, 'totalElements:', response.data.totalElements);
     } else {
-      console.warn('⚠️ Estructura de respuesta no reconocida:', response.data);
       totalMovimientos.value = 0;
     }
     
@@ -446,7 +412,6 @@ const cargarMovimientos = async () => {
       return fechaB - fechaA;
     });
     
-    console.log('✅ Movimientos cargados:', movimientos.value.length, 'Total:', totalMovimientos.value);
   } catch (error) {
     movimientos.value = [];
     totalMovimientos.value = 0;
@@ -455,7 +420,6 @@ const cargarMovimientos = async () => {
       ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
       : 'Error al cargar movimientos. Verifica la conexión con el servidor.';
     showNotification(mensaje, 'error');
-    console.error('❌ Error cargando movimientos:', { status, mensaje: error.message });
   }
 };
 
@@ -470,7 +434,6 @@ const cargarUsuarios = async () => {
       ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
       : 'Error al cargar usuarios. Verifica la conexión con el servidor.';
     showNotification(mensaje, 'error');
-    console.error('❌ Error cargando usuarios:', { status, mensaje: error.message });
   }
 };
 
@@ -478,16 +441,12 @@ const guardarCelular = async (celularData) => {
   try {
     loadingCelular.value = true;
     
-    console.log('💾 Datos a guardar:', celularData);
-    
     if (editingCelular.value) {
       // Actualizar celular existente
-      console.log('📝 Actualizando celular:', editingCelular.value.numeroSerie);
       await celularService.actualizar(editingCelular.value.numeroSerie, celularData);
       showNotification('Celular actualizado exitosamente');
     } else {
       // Crear nuevo celular
-      console.log('➕ Creando nuevo celular');
       await celularService.crearCelular(celularData);
       showNotification('Celular creado exitosamente');
       // Limpiar formulario después de crear exitosamente
@@ -510,12 +469,6 @@ const guardarCelular = async (celularData) => {
     }
     
     showNotification(mensaje, 'error');
-    console.error('❌ Error al guardar celular:', {
-      status,
-      mensaje: error.message,
-      datosEnviados: celularData,
-      respuestaServidor: errorData
-    });
   } finally {
     loadingCelular.value = false;
   }
@@ -528,6 +481,7 @@ const guardarCelularYCerrar = async (celularData) => {
 
 const editarCelular = (celular) => {
   editingCelular.value = celular;
+  showCelularModal.value = true;
 };
 
 const cancelarEdicion = () => {
@@ -548,7 +502,6 @@ const eliminarCelular = async () => {
     cargarCelulares();
   } catch (error) {
     showNotification('Error al eliminar celular', 'error');
-    console.error('Error:', error);
   }
 };
 
@@ -560,7 +513,6 @@ const guardarMovimiento = async (movimientoData) => {
     cargarMovimientos();
   } catch (error) {
     showMovimientoNotification('❌ Error al crear movimiento', 'error');
-    console.error('Error:', error);
   } finally {
     loadingMovimiento.value = false;
   }
@@ -587,7 +539,6 @@ const guardarEdicionMovimiento = async (movimientoData) => {
     cargarMovimientos();
   } catch (error) {
     showNotification('Error al actualizar movimiento', 'error');
-    console.error('Error:', error);
   } finally {
     loadingEditMovimiento.value = false;
   }
@@ -601,17 +552,14 @@ const confirmarEliminarMovimiento = (movimiento) => {
 const eliminarMovimiento = async () => {
   try {
     if (!selectedMovimiento.value) {
-      console.warn('[EliminarMovimiento] No hay movimiento seleccionado');
       showNotification('No hay movimiento seleccionado', 'error');
       return;
     }
     const id = selectedMovimiento.value.id || selectedMovimiento.value.idMovimiento || selectedMovimiento.value?.movimientoId;
     if (!id) {
-      console.error('[EliminarMovimiento] El objeto movimiento no tiene un ID válido:', selectedMovimiento.value);
       showNotification('Movimiento sin ID (revisar backend)', 'error');
       return;
     }
-    console.log('[EliminarMovimiento] Eliminando movimiento id=', id, 'obj:', selectedMovimiento.value);
     await movimientoService.eliminar(id);
     showNotification('Movimiento eliminado exitosamente');
     showDeleteMovimientoModal.value = false;
@@ -619,7 +567,6 @@ const eliminarMovimiento = async () => {
     await cargarMovimientos();
   } catch (error) {
     const status = error?.response?.status;
-    console.error('[EliminarMovimiento] Error eliminando movimiento:', status, error);
     if (status === 404) {
       showNotification('Movimiento no encontrado (404)', 'error');
     } else if (status === 401) {
@@ -657,17 +604,12 @@ const reportarCelularRoto = async () => {
       fechaReporte: reporteForm.fechaReporte // Formato YYYY-MM-DD
     };
 
-    console.log('📤 Enviando reporte:', reporte);
-
     // Delay de 2 segundos para mejor experiencia visual
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const response = await http.post('/api/celulares/gestion/reportar-roto', reporte);
 
-    console.log('📥 Respuesta del servidor:', response.status, response.statusText);
-
     const resultado = response.data;
-    console.log('✅ Resultado exitoso:', resultado);
     resultadoReporte.value = resultado;
     
     // Limpiar formulario si fue exitoso
@@ -688,7 +630,6 @@ const reportarCelularRoto = async () => {
       await cargarCelulares();
     }
   } catch (error) {
-    console.error('💥 Error completo:', error);
     showNotification(`Error al reportar celular roto: ${error.message}`, 'error');
   } finally {
     loadingReporte.value = false;

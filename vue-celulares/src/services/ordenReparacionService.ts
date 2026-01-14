@@ -68,7 +68,6 @@ class OrdenReparacionService {
       const response = await api.get('/api/ordenes-reparacion');
       return response.data;
     } catch (error: any) {
-      console.error('Error al obtener órdenes de reparación:', error);
       throw this.manejarError(error, 'obtener órdenes de reparación');
     }
   }
@@ -79,7 +78,6 @@ class OrdenReparacionService {
       const response = await api.post('/api/ordenes-reparacion', orden);
       return response.data;
     } catch (error: any) {
-      console.error('Error al crear orden de reparación:', error);
       throw this.manejarError(error, 'crear orden de reparación');
     }
   }
@@ -90,7 +88,6 @@ class OrdenReparacionService {
       const response = await api.get(`/api/ordenes-reparacion/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error al obtener orden de reparación:', error);
       throw this.manejarError(error, 'obtener orden de reparación');
     }
   }
@@ -101,7 +98,6 @@ class OrdenReparacionService {
       const response = await api.put(`/api/ordenes-reparacion/${id}`, orden);
       return response.data;
     } catch (error: any) {
-      console.error('Error al actualizar orden de reparación:', error);
       throw this.manejarError(error, 'actualizar orden de reparación');
     }
   }
@@ -111,7 +107,6 @@ class OrdenReparacionService {
     try {
       await api.delete(`/api/ordenes-reparacion/${id}`);
     } catch (error: any) {
-      console.error('Error al eliminar orden de reparación:', error);
       throw this.manejarError(error, 'eliminar orden de reparación');
     }
   }
@@ -122,7 +117,6 @@ class OrdenReparacionService {
       const response = await api.get(`/api/reparacion-items/orden/${ordenId}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error al obtener items de reparación:', error);
       throw this.manejarError(error, 'obtener items de reparación');
     }
   }
@@ -130,13 +124,9 @@ class OrdenReparacionService {
   // Agregar item a una orden
   async agregarItem(ordenId: number, item: CrearItemRequest): Promise<ReparacionItem> {
     try {
-      console.log('Agregando item a orden:', ordenId);
-      console.log('Datos del item:', JSON.stringify(item, null, 2));
-      console.log('Token de auth:', localStorage.getItem('auth')); // Debug auth
       const response = await api.post(`/api/reparacion-items/orden/${ordenId}`, item);
       return response.data;
     } catch (error: any) {
-      console.error('Error al agregar item de reparación:', error);
       throw this.manejarError(error, 'agregar item de reparación');
     }
   }
@@ -146,7 +136,6 @@ class OrdenReparacionService {
     try {
       await api.delete(`/api/reparacion-items/${itemId}`);
     } catch (error: any) {
-      console.error('Error al eliminar item de reparación:', error);
       throw this.manejarError(error, 'eliminar item de reparación');
     }
   }
@@ -157,7 +146,6 @@ class OrdenReparacionService {
       const response = await api.put(`/api/reparacion-items/${itemId}`, item);
       return response.data;
     } catch (error: any) {
-      console.error('Error al actualizar item de reparación:', error);
       throw this.manejarError(error, 'actualizar item de reparación');
     }
   }
@@ -165,11 +153,9 @@ class OrdenReparacionService {
   // Cambiar estado de una orden
   async cambiarEstado(ordenId: number, estado: string): Promise<OrdenReparacion> {
     try {
-      console.log('Cambiando estado de orden:', ordenId, 'a:', estado);
       const response = await api.put(`/api/ordenes-reparacion/${ordenId}/estado?estado=${estado}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error al cambiar estado de orden:', error);
       throw this.manejarError(error, 'cambiar estado de orden');
     }
   }
@@ -179,10 +165,6 @@ class OrdenReparacionService {
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
-      
-      console.log('Error response completa:', error.response);
-      console.log('Error response data:', data);
-      console.log('Error response status:', status);
       
       let message = 'Error del servidor';
       

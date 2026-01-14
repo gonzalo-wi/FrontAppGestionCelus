@@ -28,7 +28,6 @@ export const mapearTipoMovimiento = (tipoFrontend: string): string => {
     'BAJA': 'REMOVAL'
   };
   
-  console.log(`🔄 Mapeando tipo: ${tipoFrontend} -> ${mapeo[tipoFrontend] || tipoFrontend}`);
   return mapeo[tipoFrontend] || tipoFrontend;
 };
 

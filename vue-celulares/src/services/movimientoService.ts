@@ -38,7 +38,6 @@ export const movimientoService = {
       ...movimiento,
       tipo: mapearTipoMovimiento(movimiento.tipo)
     };
-    console.log('🔧 Enviando movimiento al backend:', movimientoParaBackend);
     return api.post<Movimiento>('/api/movimientos', movimientoParaBackend);
   },
   
@@ -56,7 +55,6 @@ export const movimientoService = {
       tipo: mapearTipoMovimiento(movimiento.tipo)
     } : movimiento;
     
-    console.log('🔧 Actualizando movimiento en backend:', { id, movimiento: movimientoParaBackend });
     return api.put<MovimientoDetalle>(`/api/movimientos/${id}`, movimientoParaBackend);
   },
   
@@ -66,17 +64,13 @@ export const movimientoService = {
   // Función de debug para probar tipos válidos
   probarTiposMovimiento: async () => {
     const tiposParaProbar = ['ASIGNACION', 'CAMBIO', 'DEVOLUCION', 'REPARACION', 'BAJA'];
-    console.log('🧪 Probando tipos de movimiento válidos...');
     
     for (const tipo of tiposParaProbar) {
       try {
         // Solo logging de tipos válidos, sin crear variables innecesarias
-        console.log(`✅ Tipo ${tipo}: VÁLIDO (simulado)`);
       } catch (error: any) {
         if (error.response?.status === 500 && error.response.data?.message?.includes('No enum constant')) {
-          console.log(`❌ Tipo ${tipo}: INVÁLIDO - ${error.response.data.message}`);
         } else {
-          console.log(`⚠️ Tipo ${tipo}: Error diferente - ${error.message}`);
         }
       }
     }

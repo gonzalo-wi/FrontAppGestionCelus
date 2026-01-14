@@ -39,12 +39,10 @@ export const obtenerMovimientos = () => {
 
 export const celularService = {
   crearCelular(celular: Celular) {
-    console.log('Creando celular:', celular);
     return api.post<Celular>(`${API_URL}/celulares`, celular);
   },
 
   obtenerTodos() {
-    console.log('Obteniendo todos los celulares...');
     return api.get<Celular[]>(`${API_URL}/celulares`);
   },
 

@@ -30,7 +30,6 @@ http.interceptors.response.use(
   async (err) => {
     const status = err?.response?.status;
     if (status === 401) {
-      console.warn('Auth error', status, '->', err.config?.url);
       // 401 = no autenticado: limpiar sesión y enviar a login
       const currentPath = router.currentRoute.value.fullPath;
       
@@ -44,7 +43,6 @@ http.interceptors.response.use(
       return Promise.reject(new Error('Usuario no autenticado'));
     } else if (status === 403) {
       // 403 = autenticado pero sin permisos. No cerramos sesión.
-      console.warn('Forbidden (403) ->', err.config?.url);
     }
     return Promise.reject(err);
   }

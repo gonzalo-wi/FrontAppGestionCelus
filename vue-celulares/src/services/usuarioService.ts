@@ -40,9 +40,6 @@ export const usuarioService = {
   
   actualizar(numReparto: string, usuario: Usuario) {
     const encodedNumReparto = encodeURIComponent(numReparto);
-    console.log('Actualizando usuario - numReparto original:', numReparto);
-    console.log('URL encoded:', encodedNumReparto);
-    console.log('URL completa:', `/api/usuarios/${encodedNumReparto}`);
     return api.put<Usuario>(`/api/usuarios/${encodedNumReparto}`, usuario);
   },
 

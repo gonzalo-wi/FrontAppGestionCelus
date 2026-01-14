@@ -220,7 +220,6 @@ const login = async () => {
   loginStatus.value = 'Conectando al servidor...';
 
   try {
-    console.log('🔑 Intentando login con:', username.value);
     
     // Simular pasos de carga para mejor UX
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -233,7 +232,6 @@ const login = async () => {
     
     if (success) {
       const user = authService.getCurrentUser();
-      console.log('✅ Login exitoso, usuario:', user);
       
       await new Promise(resolve => setTimeout(resolve, 400));
       loginStatus.value = '¡Bienvenido! Redirigiendo...';
@@ -252,13 +250,11 @@ const login = async () => {
         redirect = isAdmin ? '/' : '/mis-solicitudes';
       }
       
-      console.log('📍 Redirigiendo a:', redirect, '(Admin:', isAdmin, ')');
       router.replace(redirect);
     } else {
       error.value = 'Usuario o contraseña incorrectos';
     }
   } catch (e) {
-    console.error('❌ Error en login:', e);
     error.value = 'Error de conexión. Intenta nuevamente.';
   } finally {
     loading.value = false;

@@ -360,8 +360,8 @@ const eliminarUsuario = async () => {
       movimientoService.obtenerTodos()
     ]);
 
-    const celulares = celusResp.status === 'fulfilled' ? celusResp.value.data : [];
-    const movimientos = movsResp.status === 'fulfilled' ? movsResp.value.data : [];
+    const celulares = celusResp.status === 'fulfilled' ? (Array.isArray(celusResp.value.data) ? celusResp.value.data : []) : [];
+    const movimientos = movsResp.status === 'fulfilled' ? (Array.isArray(movsResp.value.data) ? movsResp.value.data : []) : [];
     const celularesAsociados = celulares.filter(c => c.usuario?.numReparto === clave);
     const movimientosAsociados = movimientos.filter(m => m.usuario?.numReparto === clave);
 

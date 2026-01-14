@@ -36,7 +36,6 @@ class ProveedorService {
       const response = await api.get('/api/proveedores');
       return response.data;
     } catch (error: any) {
-      console.error('Error al obtener proveedores:', error);
       throw this.manejarError(error, 'obtener proveedores');
     }
   }
@@ -47,7 +46,6 @@ class ProveedorService {
       const response = await api.post('/api/proveedores', proveedor);
       return response.data;
     } catch (error: any) {
-      console.error('Error al crear proveedor:', error);
       throw this.manejarError(error, 'crear proveedor');
     }
   }
@@ -58,7 +56,6 @@ class ProveedorService {
       const response = await api.get(`/api/proveedores/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error al obtener proveedor:', error);
       throw this.manejarError(error, 'obtener proveedor');
     }
   }
@@ -69,7 +66,6 @@ class ProveedorService {
       const response = await api.put(`/api/proveedores/${id}`, proveedor);
       return response.data;
     } catch (error: any) {
-      console.error('Error al actualizar proveedor:', error);
       throw this.manejarError(error, 'actualizar proveedor');
     }
   }
@@ -79,7 +75,6 @@ class ProveedorService {
     try {
       await api.delete(`/api/proveedores/${id}`);
     } catch (error: any) {
-      console.error('Error al eliminar proveedor:', error);
       throw this.manejarError(error, 'eliminar proveedor');
     }
   }
@@ -90,7 +85,6 @@ class ProveedorService {
       const response = await api.patch(`/api/proveedores/${id}/activo`, { activo });
       return response.data;
     } catch (error: any) {
-      console.error('Error al cambiar estado del proveedor:', error);
       throw this.manejarError(error, 'cambiar estado del proveedor');
     }
   }
