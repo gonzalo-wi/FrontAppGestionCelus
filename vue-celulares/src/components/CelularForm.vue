@@ -1,22 +1,6 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h2 class="text-xl font-semibold text-gray-900">{{ isEditing ? 'Editar Celular' : 'Crear Celular' }}</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ isEditing ? 'Modifica los datos del celular' : 'Agrega un nuevo celular al inventario' }}</p>
-      </div>
-      <div class="flex space-x-2">
-        <button v-if="isEditing" @click="cancelEdit" 
-                class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-          Cancelar
-        </button>
-      </div>
-    </div>
-
-    <form @submit.prevent="guardar" class="space-y-4">
+  <div class="relative">
+    <form @submit.prevent="guardar" class="space-y-6">
       <!-- Código Interno (siempre visible) -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -113,16 +97,23 @@
         </div>
       </div>
 
-      <div class="flex justify-end pt-4 border-t border-gray-200">
+      <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+        <button v-if="isEditing" @click="cancelEdit" type="button"
+                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          Cancelar
+        </button>
         <button type="submit" :disabled="loading"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
-          <svg v-if="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="inline-flex items-center px-8 py-3 border border-transparent rounded-xl shadow-lg text-base font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105">
+          <svg v-if="loading" class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
           </svg>
-          {{ isEditing ? 'Actualizar' : 'Crear' }} Celular
+          {{ loading ? (isEditing ? 'Actualizando...' : 'Creando...') : (isEditing ? 'Actualizar Celular' : 'Crear Celular') }}
         </button>
       </div>
     </form>

@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: vue-celulares-frontend
     ports:
-      - "5173:80"
+      - "5178:80"
     restart: unless-stopped
     environment:
       - NODE_ENV=production

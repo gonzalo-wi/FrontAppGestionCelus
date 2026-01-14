@@ -257,6 +257,7 @@
                 <option value="RRHH">RRHH</option>
                 <option value="ADMINISTRACION">ADMINISTRACION</option>
                 <option value="COMPRAS">COMPRAS</option>
+                <option value="GASTRONOMIA">GASTRONOMIA</option>
               </select>
             </div>
           </div>

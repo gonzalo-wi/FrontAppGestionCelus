@@ -637,7 +637,7 @@
               </div>
               <div class="text-center sm:text-right">
                 <p class="text-cyan-100 text-sm sm:text-base">Con Celular Asignado</p>
-                <p class="text-xl sm:text-2xl font-bold">{{ miFlota.filter(u => u.celular).length }}</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ miFlota.filter(u => u.celular || u.numeroSerieCelular || u.marcaCelular).length }}</p>
               </div>
             </div>
           </div>
@@ -723,6 +723,14 @@
                   <div v-if="u.celular">
                     <p class="text-sm font-medium text-gray-900">{{ u.celular.marca }} {{ u.celular.modelo }}</p>
                     <p class="text-xs text-gray-500 mt-1">{{ u.celular.numeroSerie || 'S/N no disponible' }}</p>
+                  </div>
+                  <div v-else-if="u.marcaCelular && u.modeloCelular">
+                    <p class="text-sm font-medium text-gray-900">{{ u.marcaCelular }} {{ u.modeloCelular }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Nº Serie: {{ u.numeroSerieCelular || 'No disponible' }}</p>
+                  </div>
+                  <div v-else-if="u.numeroSerieCelular">
+                    <p class="text-sm font-medium text-gray-900">Nº Serie: {{ u.numeroSerieCelular }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Celular asignado</p>
                   </div>
                   <div v-else>
                     <span class="text-gray-400 italic text-sm">Sin asignar</span>
@@ -867,6 +875,28 @@
                       <div>
                         <p class="text-sm font-semibold text-gray-900">{{ u.celular.marca }} {{ u.celular.modelo }}</p>
                         <p class="text-xs text-gray-500">{{ u.celular.numeroSerie || 'S/N no disponible' }}</p>
+                      </div>
+                    </div>
+                    <div v-else-if="u.marcaCelular && u.modeloCelular" class="flex items-center gap-2">
+                      <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">{{ u.marcaCelular }} {{ u.modeloCelular }}</p>
+                        <p class="text-xs text-gray-500">Nº Serie: {{ u.numeroSerieCelular || 'No disponible' }}</p>
+                      </div>
+                    </div>
+                    <div v-else-if="u.numeroSerieCelular" class="flex items-center gap-2">
+                      <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Nº Serie: {{ u.numeroSerieCelular }}</p>
+                        <p class="text-xs text-gray-500">Celular asignado</p>
                       </div>
                     </div>
                     <div v-else class="flex items-center gap-2">

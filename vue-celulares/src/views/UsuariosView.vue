@@ -124,7 +124,7 @@ const cargarUsuarios = async () => {
     console.log('🔄 Cargando usuarios...');
     const response = await usuarioService.obtenerTodos();
     console.log('📥 Respuesta de usuarios:', response.data);
-    usuarios.value = response.data || [];
+    usuarios.value = Array.isArray(response.data) ? response.data : [];
     console.log('📋 Usuarios cargados:', usuarios.value.length);
     
     // Log de algunos usuarios para ver sus datos
@@ -140,8 +140,13 @@ const cargarUsuarios = async () => {
     
     aplicarFiltros();
   } catch (error) {
-    console.error('❌ Error al cargar usuarios:', error);
-    showNotification('Error al cargar usuarios', 'error');
+    usuarios.value = [];
+    const status = error?.response?.status;
+    const mensaje = status === 500 
+      ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
+      : 'Error al cargar usuarios. Verifica la conexión con el servidor.';
+    showNotification(mensaje, 'error');
+    console.error('❌ Error cargando usuarios:', { status, mensaje: error.message });
   } finally {
     loading.value = false;
   }
@@ -670,10 +675,9 @@ onMounted(() => {
                 <label class="block text-sm font-semibold text-gray-700">Número de Reparto</label>
                 <input 
                   v-model="form.numReparto"
-                  :disabled="isEditing"
                   type="text" 
                   required
-                  class="w-full bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 placeholder-gray-400 disabled:bg-gray-100"
+                  class="w-full bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 placeholder-gray-400"
                   placeholder="Ej: U001"
                 />
               </div>

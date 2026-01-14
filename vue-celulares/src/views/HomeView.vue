@@ -202,6 +202,7 @@ import { ref, onMounted, computed } from 'vue';
 import { celularService, obtenerMovimientos } from '@/services/celularService.ts';
 import { usuarioService } from '@/services/usuarioService.ts';
 import { authService } from '@/services/authService';
+import estadisticasService from '@/services/estadisticasService';
 import DashboardUsuario from '@/components/DashboardUsuario.vue';
 import NotificacionesPanel from '@/components/NotificacionesPanel.vue';
 
@@ -226,23 +227,16 @@ const cargarEstadisticas = async () => {
   
   stats.value.loading = true;
   try {
-    // Cargar datos básicos disponibles para todos los usuarios
-    const promises = [
-      celularService.obtenerTodos(),
-      obtenerMovimientos()
-    ];
-    
-    // Solo los administradores pueden ver estadísticas de usuarios
+    // Solo los administradores pueden ver estadísticas generales
     if (isAdmin.value) {
-      promises.push(usuarioService.obtenerTodos());
+      // Usar el nuevo endpoint rápido para obtener todas las estadísticas generales
+      const estadisticas = await estadisticasService.obtenerEstadisticasGenerales();
+      
+      stats.value.celulares = estadisticas.totalDispositivos;
+      stats.value.asignados = estadisticas.totalAsignados;
+      stats.value.usuarios = estadisticas.totalUsuarios;
+      stats.value.movimientos = estadisticas.totalMovimientos;
     }
-    
-    const [celularesResponse, movimientosResponse, usuariosResponse] = await Promise.all(promises);
-    
-    stats.value.celulares = celularesResponse.data.length;
-    stats.value.asignados = celularesResponse.data.filter(c => c.usuario).length;
-    stats.value.usuarios = usuariosResponse ? usuariosResponse.data.length : 0;
-    stats.value.movimientos = movimientosResponse.data.length;
   } catch (error) {
     console.error('Error cargando estadísticas:', error);
     // Mostrar datos de ejemplo en caso de error

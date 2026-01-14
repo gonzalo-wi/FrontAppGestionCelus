@@ -1,6 +1,6 @@
 import http from './http';
 
-// Usamos el cliente HTTP compartido con interceptor de Authorization
+
 const api = http;
 
 export interface UsuarioSistema {

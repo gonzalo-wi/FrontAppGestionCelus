@@ -157,7 +157,7 @@ const togglePanel = () => {
 const cargarAlertas = async () => {
   try {
     loading.value = true
-    const response = await fetch('/api/alertas/no-leidas', {
+    const response = await fetch('/api/notificaciones/no-leidas', {
       headers: {
         'Authorization': 'Basic ' + localStorage.getItem('auth')
       }
@@ -205,7 +205,7 @@ const cambiarVista = async (vista) => {
 
 const marcarLeida = async (alertaId) => {
   try {
-    const response = await fetch(`/api/alertas/${alertaId}/marcar-leida`, {
+    const response = await fetch(`/api/notificaciones/${alertaId}/marcar-leida`, {
       method: 'PUT',
       headers: {
         'Authorization': 'Basic ' + localStorage.getItem('auth')
@@ -229,7 +229,7 @@ const marcarLeida = async (alertaId) => {
 
 const eliminar = async (alertaId) => {
   try {
-    const response = await fetch(`/api/alertas/${alertaId}`, {
+    const response = await fetch(`/api/notificaciones/${alertaId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': 'Basic ' + localStorage.getItem('auth')

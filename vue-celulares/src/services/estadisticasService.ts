@@ -18,6 +18,13 @@ export interface EstadisticasResumen {
   estadisticasMensuales: EstadisticasMensuales[];
 }
 
+export interface EstadisticasGenerales {
+  totalDispositivos: number;
+  totalAsignados: number;
+  totalUsuarios: number;
+  totalMovimientos: number;
+}
+
 export interface EstadisticasRegion {
   region: string;
   totalUsuarios: number;
@@ -126,6 +133,15 @@ class EstadisticasService {
       return response.data;
     } catch (error: any) {
       this.manejarError(error, 'obtener estadísticas generales');
+    }
+  }
+
+  async obtenerEstadisticasGenerales(): Promise<EstadisticasGenerales> {
+    try {
+      const response = await api.get('/api/estadisticas/generales');
+      return response.data;
+    } catch (error: any) {
+      this.manejarError(error, 'obtener estadísticas generales rápidas');
     }
   }
 
@@ -498,3 +514,4 @@ export const agruparRegionesComerciales = (regiones: EstadisticasRegion[]): Esta
 };
 
 export const estadisticasService = new EstadisticasService();
+export default estadisticasService;

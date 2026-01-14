@@ -1,26 +1,58 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative overflow-visible">
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold text-gray-900">Crear Movimiento</h2>
-      <p class="text-sm text-gray-500 mt-1">Registra un nuevo movimiento de celular</p>
-    </div>
-
-    <form @submit.prevent="guardar" class="space-y-4">
+  <div class="relative overflow-visible">
+    <form @submit.prevent="guardar" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+        <!-- Campo predictivo para usuario -->
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
           <input 
-            v-model="form.fecha"
-            type="date" 
+            ref="usuarioInput"
+            v-model="usuarioSearch"
+            @input="onUsuarioSearch"
+            @focus="showUsuarioSuggestions = true"
+            @blur="hideUsuarioSuggestions"
+            type="text" 
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            placeholder="Escribe el número de reparto o región..."
+            autocomplete="off"
           />
+          
+          <!-- Lista de sugerencias para usuario -->
+          <div v-if="showUsuarioSuggestions && filteredUsuarios.length > 0"
+               style="z-index: 99999; max-height: 180px;"
+               class="absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl overflow-y-auto">
+            <div 
+              v-for="usuario in filteredUsuarios" 
+              :key="usuario.numReparto"
+              @mousedown="selectUsuario(usuario)"
+              class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-900">{{ usuario.numReparto }}</p>
+                  <p class="text-sm text-gray-600">{{ usuario.region }}</p>
+                </div>
+                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                  {{ usuario.estado || 'ACTIVO' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Usuario seleccionado -->
+          <div v-if="selectedUsuario" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-sm font-medium text-blue-800">
+              {{ selectedUsuario.numReparto }} - {{ selectedUsuario.region }}
+            </p>
+          </div>
         </div>
         
         <!-- Campo predictivo para celular por código interno -->
         <div class="relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">Código Interno del Celular</label>
           <input 
+            ref="celularInput"
             v-model="celularSearch"
             @input="onCelularSearch"
             @focus="showCelularSuggestions = true"
@@ -33,8 +65,9 @@
           />
           
           <!-- Lista de sugerencias para celular -->
-          <div v-if="showCelularSuggestions && filteredCelulares.length > 0" 
-               class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+          <div v-if="showCelularSuggestions && filteredCelulares.length > 0"
+               style="z-index: 99999; max-height: 180px;"
+               class="absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl overflow-y-auto">
             <div 
               v-for="celular in filteredCelulares" 
               :key="celular.numeroSerie"
@@ -71,52 +104,14 @@
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Campo predictivo para usuario -->
-        <div class="relative">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
           <input 
-            ref="usuarioInput"
-            v-model="usuarioSearch"
-            @input="onUsuarioSearch"
-            @focus="showUsuarioSuggestions = true; checkDropdownPosition()"
-            @blur="hideUsuarioSuggestions"
-            type="text" 
+            v-model="form.fecha"
+            type="date" 
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            placeholder="Escribe el número de reparto o región..."
-            autocomplete="off"
           />
-          
-          <!-- Lista de sugerencias para usuario con posicionamiento dinámico -->
-          <div v-if="showUsuarioSuggestions && filteredUsuarios.length > 0" 
-               :class="[
-                 'absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-2xl max-h-60 overflow-y-auto',
-                 shouldShowUsuarioDropdownAbove ? 'bottom-full mb-1' : 'top-full mt-1'
-               ]">
-            <div 
-              v-for="usuario in filteredUsuarios" 
-              :key="usuario.numReparto"
-              @mousedown="selectUsuario(usuario)"
-              class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-            >
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="font-medium text-gray-900">{{ usuario.numReparto }}</p>
-                  <p class="text-sm text-gray-600">{{ usuario.region }}</p>
-                </div>
-                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                  {{ usuario.estado || 'ACTIVO' }}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Usuario seleccionado -->
-          <div v-if="selectedUsuario" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-            <p class="text-sm font-medium text-blue-800">
-              {{ selectedUsuario.numReparto }} - {{ selectedUsuario.region }}
-            </p>
-          </div>
         </div>
         
         <div>
@@ -131,16 +126,16 @@
         </div>
       </div>
 
-      <div class="flex justify-end pt-4 border-t border-gray-200">
+      <div class="flex justify-end pt-6 border-t border-gray-200">
         <button type="submit" :disabled="loading || !selectedCelular || !selectedUsuario"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50">
-          <svg v-if="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="inline-flex items-center px-8 py-3 border border-transparent rounded-xl shadow-lg text-base font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105">
+          <svg v-if="loading" class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
           </svg>
-          Crear Movimiento
+          {{ loading ? 'Creando...' : 'Crear Movimiento' }}
         </button>
       </div>
     </form>
@@ -164,6 +159,7 @@ const form = reactive({
 });
 
 // Referencias para los elementos
+const celularInput = ref(null);
 const usuarioInput = ref(null);
 
 // Estados para el campo predictivo de celular
@@ -175,16 +171,16 @@ const showCelularSuggestions = ref(false);
 const usuarioSearch = ref('');
 const selectedUsuario = ref(null);
 const showUsuarioSuggestions = ref(false);
-const shouldShowUsuarioDropdownAbove = ref(false);
 
 // Computed para filtrar celulares
 const filteredCelulares = computed(() => {
   console.log('🔍 Filtrando celulares - Búsqueda:', celularSearch.value);
+  console.log('📱 Total celulares disponibles:', props.celulares.length);
   
   if (!celularSearch.value || celularSearch.value.trim().length === 0) {
     console.log('📋 Sin búsqueda, mostrando primeros 20 ordenados');
     // Mostrar primeros 20 ordenados por código interno numéricamente
-    return props.celulares
+    const result = props.celulares
       .slice()
       .sort((a, b) => {
         const numA = parseInt(a.codigoInterno) || 0;
@@ -192,35 +188,43 @@ const filteredCelulares = computed(() => {
         return numA - numB;
       })
       .slice(0, 20);
+    console.log('📋 Primeros 5 celulares:', result.slice(0, 5).map(c => ({ codigoInterno: c.codigoInterno, marca: c.marca, modelo: c.modelo })));
+    return result;
   }
   
   const searchTerm = celularSearch.value.trim().toLowerCase();
-  console.log('🎯 Término de búsqueda:', searchTerm);
+  console.log('🎯 Término de búsqueda procesado:', searchTerm);
   
   const filtered = props.celulares.filter(celular => {
+    // Convertir a string y luego a minúsculas para comparación
     const codigoInterno = celular.codigoInterno?.toString().toLowerCase() || '';
     const numeroSerie = celular.numeroSerie?.toString().toLowerCase() || '';
     const marca = celular.marca?.toLowerCase() || '';
     const modelo = celular.modelo?.toLowerCase() || '';
     
     const matches = (
-      codigoInterno.includes(searchTerm) ||
-      numeroSerie.includes(searchTerm) ||
-      marca.includes(searchTerm) ||
-      modelo.includes(searchTerm)
+      codigoInterno.startsWith(searchTerm) ||
+      numeroSerie.startsWith(searchTerm) ||
+      marca.startsWith(searchTerm) ||
+      modelo.startsWith(searchTerm)
     );
     
     if (matches) {
       console.log('✅ Coincidencia encontrada:', {
         codigoInterno: celular.codigoInterno,
+        numeroSerie: celular.numeroSerie,
         marca: celular.marca,
-        modelo: celular.modelo
+        modelo: celular.modelo,
+        estado: celular.estado
       });
     }
     
     return matches;
-  })
-  .sort((a, b) => {
+  });
+  
+  console.log('📊 Total resultados filtrados:', filtered.length);
+  
+  const sorted = filtered.sort((a, b) => {
     // Ordenar por coincidencia exacta primero, luego numéricamente
     const aExact = a.codigoInterno?.toString().toLowerCase() === searchTerm;
     const bExact = b.codigoInterno?.toString().toLowerCase() === searchTerm;
@@ -235,35 +239,52 @@ const filteredCelulares = computed(() => {
   })
   .slice(0, 20);
   
-  console.log('📊 Resultados filtrados:', filtered.length);
-  return filtered;
+  console.log('📋 Primeros 5 resultados ordenados:', sorted.slice(0, 5).map(c => ({ codigoInterno: c.codigoInterno, marca: c.marca, modelo: c.modelo })));
+  return sorted;
 });
 
 // Computed para filtrar usuarios
 const filteredUsuarios = computed(() => {
+  console.log('🔍 Filtrando usuarios - Búsqueda:', usuarioSearch.value);
+  console.log('👥 Total usuarios disponibles:', props.usuarios.length);
+  
   if (!usuarioSearch.value || usuarioSearch.value.trim().length === 0) {
+    console.log('📋 Sin búsqueda, mostrando primeros 10');
     return props.usuarios.slice(0, 10); // Mostrar los primeros 10 si no hay búsqueda
   }
   
   const searchTerm = usuarioSearch.value.trim().toLowerCase();
+  console.log('🎯 Término de búsqueda procesado:', searchTerm);
+  
   const filtered = props.usuarios.filter(usuario => {
+    // Convertir a string y luego a minúsculas para comparación
     const numReparto = usuario.numReparto?.toString().toLowerCase() || '';
     const region = usuario.region?.toLowerCase() || '';
     const nombre = usuario.nombre?.toLowerCase() || '';
     const zona = usuario.zona?.toLowerCase() || '';
     
-    return (
-      numReparto.includes(searchTerm) ||
-      region.includes(searchTerm) ||
-      nombre.includes(searchTerm) ||
-      zona.includes(searchTerm) ||
-      // Búsqueda exacta por número
-      numReparto === searchTerm
+    const matches = (
+      numReparto.startsWith(searchTerm) ||
+      region.startsWith(searchTerm) ||
+      nombre.startsWith(searchTerm) ||
+      zona.startsWith(searchTerm)
     );
-  }).slice(0, 15); // Aumentar a 15 resultados
+    
+    if (matches) {
+      console.log('✅ Coincidencia encontrada:', {
+        numReparto: usuario.numReparto,
+        region: usuario.region,
+        zona: usuario.zona
+      });
+    }
+    
+    return matches;
+  });
+  
+  console.log('📊 Resultados filtrados:', filtered.length);
   
   // Ordenar resultados: coincidencias exactas primero
-  return filtered.sort((a, b) => {
+  const sorted = filtered.sort((a, b) => {
     const aNumReparto = a.numReparto?.toString().toLowerCase() || '';
     const bNumReparto = b.numReparto?.toString().toLowerCase() || '';
     
@@ -273,7 +294,10 @@ const filteredUsuarios = computed(() => {
     if (bNumReparto.startsWith(searchTerm) && !aNumReparto.startsWith(searchTerm)) return 1;
     
     return 0;
-  });
+  }).slice(0, 15); // Aumentar a 15 resultados
+  
+  console.log('📋 Primeros 5 resultados ordenados:', sorted.slice(0, 5));
+  return sorted;
 });
 
 // Métodos para manejo de celular
@@ -304,7 +328,6 @@ const hideCelularSuggestions = () => {
 const onUsuarioSearch = () => {
   selectedUsuario.value = null;
   showUsuarioSuggestions.value = true;
-  checkDropdownPosition();
   
   // Debug logs para usuarios
   console.log('🔍 Búsqueda de usuario:', usuarioSearch.value);
@@ -325,21 +348,6 @@ const hideUsuarioSuggestions = () => {
   setTimeout(() => {
     showUsuarioSuggestions.value = false;
   }, 150); // Delay para permitir el click en las sugerencias
-};
-
-// Función para verificar si el dropdown debe mostrarse arriba
-const checkDropdownPosition = async () => {
-  await nextTick();
-  if (usuarioInput.value) {
-    const inputRect = usuarioInput.value.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const dropdownHeight = 240; // max-h-60 = ~240px
-    const spaceBelow = viewportHeight - inputRect.bottom;
-    const spaceAbove = inputRect.top;
-    
-    // Si no hay suficiente espacio abajo pero sí arriba, mostrar arriba
-    shouldShowUsuarioDropdownAbove.value = spaceBelow < dropdownHeight && spaceAbove > dropdownHeight;
-  }
 };
 
 const resetForm = () => {

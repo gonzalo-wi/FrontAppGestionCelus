@@ -241,9 +241,18 @@ const login = async () => {
       // Pequeño delay adicional para mostrar mensaje de bienvenida
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Redirigir a la ruta original (si existe) o al home
-      const redirect = (route.query.redirect as string) || '/';
-      console.log('📍 Redirigiendo a:', redirect);
+      // Redirigir según el rol del usuario
+      const isAdmin = authService.isAdmin();
+      let redirect: string;
+      
+      if (route.query.redirect) {
+        redirect = route.query.redirect as string;
+      } else {
+        // Si no hay redirect, enviar según el rol
+        redirect = isAdmin ? '/' : '/mis-solicitudes';
+      }
+      
+      console.log('📍 Redirigiendo a:', redirect, '(Admin:', isAdmin, ')');
       router.replace(redirect);
     } else {
       error.value = 'Usuario o contraseña incorrectos';

@@ -38,12 +38,10 @@ export const alertaService = {
     }
   },
 
-  /**
-   * Obtiene alertas no leídas
-   */
+ 
   async obtenerNoLeidas() {
     try {
-      const response = await http.get('/alertas/no-leidas');
+      const response = await http.get('/no-leidas');
       return response;
     } catch (error) {
       console.error('Error al obtener alertas no leídas:', error);
@@ -51,9 +49,7 @@ export const alertaService = {
     }
   },
 
-  /**
-   * Marca una alerta como leída
-   */
+
   async marcarComoLeida(alertaId: number) {
     try {
       const response = await http.put(`/alertas/${alertaId}/marcar-leida`);

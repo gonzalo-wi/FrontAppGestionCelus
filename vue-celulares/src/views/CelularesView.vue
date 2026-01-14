@@ -1,6 +1,6 @@
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import { celularService } from '@/services/celularService.ts';
 import { movimientoService } from '@/services/movimientoService.ts';
 import { usuarioService } from '@/services/usuarioService.ts';
@@ -18,6 +18,7 @@ import Pagination from '@/components/Pagination.vue';
 // Estados reactivos
 const celulares = ref([]);
 const movimientos = ref([]);
+const totalMovimientos = ref(0); // Total de movimientos del backend
 const usuarios = ref([]);
 const loading = ref(false);
 const loadingCelular = ref(false);
@@ -32,6 +33,8 @@ const itemsPerPageMovimientos = ref(25);
 
 // Modales
 const showDeleteModal = ref(false);
+const showMovimientoModal = ref(false);
+const showCelularModal = ref(false);
 const selectedCelular = ref(null);
 const editingCelular = ref(null);
 const celularFormRef = ref(null);
@@ -66,14 +69,129 @@ const reporteForm = reactive({
 
 const resultadoReporte = ref(null);
 
-// Variables para consulta de reportes de roturas
-const reportesRoturas = ref([]);
-const loadingReportes = ref(false);
-const filtrosReportes = reactive({
-  numReparto: '',
-  fechaInicio: '',
-  fechaFin: ''
+// Estados para autocompletado de reportes
+const showCodigosDropdown = ref(false);
+const showUsuariosDropdown = ref(false);
+const codigosDropdownRef = ref(null);
+const usuariosDropdownRef = ref(null);
+
+const codigosFiltrados = computed(() => {
+  console.log('🔍 Filtrando códigos - Búsqueda:', reporteForm.codigoInterno);
+  console.log('📱 Total celulares disponibles:', celulares.value.length);
+  
+  if (!reporteForm.codigoInterno || reporteForm.codigoInterno.trim().length === 0) {
+    console.log('📋 Sin búsqueda, mostrando primeros 20 ordenados');
+    const result = celulares.value
+      .slice()
+      .sort((a, b) => {
+        const numA = parseInt(a.codigoInterno) || 0;
+        const numB = parseInt(b.codigoInterno) || 0;
+        return numA - numB;
+      })
+      .slice(0, 20);
+    return result;
+  }
+  
+  const searchTerm = reporteForm.codigoInterno.trim().toLowerCase();
+  console.log('🎯 Término de búsqueda:', searchTerm);
+  
+  const filtered = celulares.value.filter(c => {
+    const codigoInterno = c.codigoInterno?.toString().toLowerCase() || '';
+    const marca = c.marca?.toLowerCase() || '';
+    const modelo = c.modelo?.toLowerCase() || '';
+    
+    const matches = (
+      codigoInterno.startsWith(searchTerm) ||
+      marca.startsWith(searchTerm) ||
+      modelo.startsWith(searchTerm)
+    );
+    
+    if (matches) {
+      console.log('✅ Coincidencia encontrada:', {
+        codigoInterno: c.codigoInterno,
+        marca: c.marca,
+        modelo: c.modelo
+      });
+    }
+    
+    return matches;
+  });
+  
+  console.log('📊 Total resultados filtrados:', filtered.length);
+  
+  return filtered.sort((a, b) => {
+    const aExact = a.codigoInterno?.toString().toLowerCase() === searchTerm;
+    const bExact = b.codigoInterno?.toString().toLowerCase() === searchTerm;
+    
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    
+    const numA = parseInt(a.codigoInterno) || 0;
+    const numB = parseInt(b.codigoInterno) || 0;
+    return numA - numB;
+  }).slice(0, 20);
 });
+const usuariosFiltrados = computed(() => {
+  console.log('🔍 Filtrando usuarios - Búsqueda:', reporteForm.numReparto);
+  console.log('👥 Total usuarios disponibles:', usuarios.value.length);
+  
+  if (!reporteForm.numReparto || reporteForm.numReparto.trim().length === 0) {
+    console.log('📋 Sin búsqueda, mostrando primeros 10');
+    return usuarios.value.slice(0, 10);
+  }
+  
+  const searchTerm = reporteForm.numReparto.trim().toLowerCase();
+  console.log('🎯 Término de búsqueda:', searchTerm);
+  
+  const filtered = usuarios.value.filter(u => {
+    const numReparto = u.numReparto?.toString().toLowerCase() || '';
+    const nombre = u.nombre?.toLowerCase() || '';
+    const apellido = u.apellido?.toLowerCase() || '';
+    const region = u.region?.toLowerCase() || '';
+    
+    const matches = (
+      numReparto.startsWith(searchTerm) ||
+      nombre.startsWith(searchTerm) ||
+      apellido.startsWith(searchTerm) ||
+      region.startsWith(searchTerm)
+    );
+    
+    if (matches) {
+      console.log('✅ Coincidencia encontrada:', {
+        numReparto: u.numReparto,
+        nombre: u.nombre,
+        apellido: u.apellido,
+        region: u.region
+      });
+    }
+    
+    return matches;
+  });
+  
+  console.log('📊 Total resultados filtrados:', filtered.length);
+  
+  return filtered.sort((a, b) => {
+    const aNumReparto = a.numReparto?.toString().toLowerCase() || '';
+    const bNumReparto = b.numReparto?.toString().toLowerCase() || '';
+    
+    if (aNumReparto === searchTerm && bNumReparto !== searchTerm) return -1;
+    if (bNumReparto === searchTerm && aNumReparto !== searchTerm) return 1;
+    if (aNumReparto.startsWith(searchTerm) && !bNumReparto.startsWith(searchTerm)) return -1;
+    if (bNumReparto.startsWith(searchTerm) && !aNumReparto.startsWith(searchTerm)) return 1;
+    
+    return 0;
+  }).slice(0, 15);
+});
+
+// Función para cerrar dropdowns al hacer clic fuera
+const handleClickOutside = (event) => {
+  if (codigosDropdownRef.value && !codigosDropdownRef.value.contains(event.target)) {
+    showCodigosDropdown.value = false;
+  }
+  if (usuariosDropdownRef.value && !usuariosDropdownRef.value.contains(event.target)) {
+    showUsuariosDropdown.value = false;
+  }
+};
 
 // Notificaciones
 const notification = reactive({
@@ -220,6 +338,25 @@ const movimientosPaginados = computed(() => {
 });
 
 // Métodos
+// Helper para formatear fechas sin problemas de zona horaria
+const formatearFecha = (fechaString) => {
+  if (!fechaString) return '-';
+  // Parsear la fecha en formato YYYY-MM-DD como fecha local
+  const [year, month, day] = fechaString.split('T')[0].split('-');
+  const fecha = new Date(year, month - 1, day);
+  return fecha.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+};
+
+const formatearHora = (fechaString) => {
+  if (!fechaString) return '-';
+  // Si la fecha incluye hora, mostrarla, sino mostrar '-'
+  if (fechaString.includes('T')) {
+    const fecha = new Date(fechaString);
+    return fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+  return '-';
+};
+
 const showNotification = (message, type = 'success') => {
   notification.message = message;
   notification.type = type;
@@ -250,10 +387,15 @@ const cargarCelulares = async () => {
   try {
     loading.value = true;
     const response = await celularService.obtenerTodos();
-    celulares.value = response.data;
+    celulares.value = Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    showNotification('Error al cargar celulares', 'error');
-    console.error('Error:', error);
+    celulares.value = [];
+    const status = error?.response?.status;
+    const mensaje = status === 500 
+      ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
+      : 'Error al cargar celulares. Verifica la conexión con el servidor.';
+    showNotification(mensaje, 'error');
+    console.error('❌ Error cargando celulares:', { status, mensaje: error.message });
   } finally {
     loading.value = false;
   }
@@ -262,18 +404,73 @@ const cargarCelulares = async () => {
 const cargarMovimientos = async () => {
   try {
     const response = await movimientoService.obtenerTodos();
-    movimientos.value = response.data;
+    console.log('📦 Respuesta movimientos completa:', response.data);
+    
+    // El backend puede devolver un array directo o una respuesta paginada con 'content'
+    let movimientosData = [];
+    if (Array.isArray(response.data)) {
+      movimientosData = response.data;
+      totalMovimientos.value = response.data.length;
+      console.log('📊 Array directo - Total movimientos:', totalMovimientos.value);
+    } else if (response.data?.content && Array.isArray(response.data.content)) {
+      movimientosData = response.data.content;
+      totalMovimientos.value = response.data.totalElements || response.data.content.length;
+      console.log('📊 Respuesta paginada - Total movimientos:', totalMovimientos.value, 'totalElements:', response.data.totalElements);
+    } else {
+      console.warn('⚠️ Estructura de respuesta no reconocida:', response.data);
+      totalMovimientos.value = 0;
+    }
+    
+    // Mapear los movimientos al formato esperado por el frontend
+    movimientos.value = movimientosData.map(mov => ({
+      id: mov.id,
+      fecha: mov.fecha,
+      tipo: mov.tipo,
+      descripcion: mov.descripcion,
+      estadoCelular: mov.estadoCelular,
+      celular: {
+        numeroSerie: mov.numeroSerieCelular,
+        codigoInterno: mov.codigoInterno || mov.numeroSerieCelular,
+        marca: mov.marca || '',
+        modelo: mov.modelo || ''
+      },
+      usuario: {
+        numReparto: mov.numRepartoUsuario,
+        nombre: mov.nombreUsuario || '',
+        apellido: mov.apellidoUsuario || ''
+      }
+    })).sort((a, b) => {
+      // Ordenar por fecha descendente (más reciente primero)
+      const fechaA = new Date(a.fecha);
+      const fechaB = new Date(b.fecha);
+      return fechaB - fechaA;
+    });
+    
+    console.log('✅ Movimientos cargados:', movimientos.value.length, 'Total:', totalMovimientos.value);
   } catch (error) {
-    console.error('Error cargando movimientos:', error);
+    movimientos.value = [];
+    totalMovimientos.value = 0;
+    const status = error?.response?.status;
+    const mensaje = status === 500 
+      ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
+      : 'Error al cargar movimientos. Verifica la conexión con el servidor.';
+    showNotification(mensaje, 'error');
+    console.error('❌ Error cargando movimientos:', { status, mensaje: error.message });
   }
 };
 
 const cargarUsuarios = async () => {
   try {
     const response = await usuarioService.obtenerTodos();
-    usuarios.value = response.data;
+    usuarios.value = Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    console.error('Error cargando usuarios:', error);
+    usuarios.value = [];
+    const status = error?.response?.status;
+    const mensaje = status === 500 
+      ? 'Error en el servidor. Verifica que el backend esté corriendo en el puerto 8080.'
+      : 'Error al cargar usuarios. Verifica la conexión con el servidor.';
+    showNotification(mensaje, 'error');
+    console.error('❌ Error cargando usuarios:', { status, mensaje: error.message });
   }
 };
 
@@ -281,12 +478,16 @@ const guardarCelular = async (celularData) => {
   try {
     loadingCelular.value = true;
     
+    console.log('💾 Datos a guardar:', celularData);
+    
     if (editingCelular.value) {
       // Actualizar celular existente
+      console.log('📝 Actualizando celular:', editingCelular.value.numeroSerie);
       await celularService.actualizar(editingCelular.value.numeroSerie, celularData);
       showNotification('Celular actualizado exitosamente');
     } else {
       // Crear nuevo celular
+      console.log('➕ Creando nuevo celular');
       await celularService.crearCelular(celularData);
       showNotification('Celular creado exitosamente');
       // Limpiar formulario después de crear exitosamente
@@ -298,11 +499,31 @@ const guardarCelular = async (celularData) => {
     editingCelular.value = null;
     cargarCelulares();
   } catch (error) {
-    showNotification('Error al guardar celular', 'error');
-    console.error('Error:', error);
+    const status = error?.response?.status;
+    const errorData = error?.response?.data;
+    
+    let mensaje = 'Error al guardar celular';
+    if (status === 500) {
+      mensaje = 'Error en el servidor. Verifica que la base de datos tenga todas las columnas necesarias (incluyendo cantidad_roturas).';
+    } else if (status === 400) {
+      mensaje = 'Datos inválidos. Verifica que todos los campos estén correctos.';
+    }
+    
+    showNotification(mensaje, 'error');
+    console.error('❌ Error al guardar celular:', {
+      status,
+      mensaje: error.message,
+      datosEnviados: celularData,
+      respuestaServidor: errorData
+    });
   } finally {
     loadingCelular.value = false;
   }
+};
+
+const guardarCelularYCerrar = async (celularData) => {
+  await guardarCelular(celularData);
+  showCelularModal.value = false;
 };
 
 const editarCelular = (celular) => {
@@ -343,6 +564,11 @@ const guardarMovimiento = async (movimientoData) => {
   } finally {
     loadingMovimiento.value = false;
   }
+};
+
+const guardarMovimientoYCerrar = async (movimientoData) => {
+  await guardarMovimiento(movimientoData);
+  showMovimientoModal.value = false;
 };
 
 // Funciones para edición de movimientos
@@ -433,6 +659,9 @@ const reportarCelularRoto = async () => {
 
     console.log('📤 Enviando reporte:', reporte);
 
+    // Delay de 2 segundos para mejor experiencia visual
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     const response = await http.post('/api/celulares/gestion/reportar-roto', reporte);
 
     console.log('📥 Respuesta del servidor:', response.status, response.statusText);
@@ -466,121 +695,6 @@ const reportarCelularRoto = async () => {
   }
 };
 
-// Funciones para consultar reportes de roturas
-const consultarTodosLosReportes = async () => {
-  loadingReportes.value = true;
-  try {
-    const response = await http.get('/api/movimientos/reportes-rotura');
-
-    reportesRoturas.value = response.data;
-    showNotification(`${reportesRoturas.value.length} reportes encontrados`, 'success');
-  } catch (error) {
-    console.error('Error al consultar reportes:', error);
-    showNotification(`Error al consultar reportes: ${error.message}`, 'error');
-    reportesRoturas.value = [];
-  } finally {
-    loadingReportes.value = false;
-  }
-};
-
-const consultarReportesPorUsuario = async () => {
-  if (!filtrosReportes.numReparto.trim()) {
-    showNotification('Ingrese un número de reparto', 'warning');
-    return;
-  }
-
-  loadingReportes.value = true;
-  try {
-    const response = await http.get(`/api/movimientos/reportes-rotura/usuario/${filtrosReportes.numReparto.trim()}`);
-
-    reportesRoturas.value = response.data;
-    showNotification(`${reportesRoturas.value.length} reportes encontrados para usuario ${filtrosReportes.numReparto}`, 'success');
-  } catch (error) {
-    console.error('Error al consultar reportes por usuario:', error);
-    showNotification(`Error al consultar reportes: ${error.message}`, 'error');
-    reportesRoturas.value = [];
-  } finally {
-    loadingReportes.value = false;
-  }
-};
-
-const consultarReportesPorFecha = async () => {
-  if (!filtrosReportes.fechaInicio || !filtrosReportes.fechaFin) {
-    showNotification('Ingrese fecha de inicio y fin', 'warning');
-    return;
-  }
-
-  loadingReportes.value = true;
-  try {
-    const response = await http.get(`/api/movimientos/reportes-rotura/fecha?fechaInicio=${filtrosReportes.fechaInicio}&fechaFin=${filtrosReportes.fechaFin}`);
-
-    reportesRoturas.value = response.data;
-    showNotification(`${reportesRoturas.value.length} reportes encontrados entre ${filtrosReportes.fechaInicio} y ${filtrosReportes.fechaFin}`, 'success');
-  } catch (error) {
-    console.error('Error al consultar reportes por fecha:', error);
-    showNotification(`Error al consultar reportes: ${error.message}`, 'error');
-    reportesRoturas.value = [];
-  } finally {
-    loadingReportes.value = false;
-  }
-};
-
-const limpiarFiltrosReportes = () => {
-  filtrosReportes.numReparto = '';
-  filtrosReportes.fechaInicio = '';
-  filtrosReportes.fechaFin = '';
-  reportesRoturas.value = [];
-};
-
-const exportarReportesRoturas = async () => {
-  if (reportesRoturas.value.length === 0) {
-    showNotification('No hay reportes para exportar', 'warning');
-    return;
-  }
-
-  try {
-    // Preparar datos para Excel
-    const datosExcel = reportesRoturas.value.map(reporte => ({
-      'ID': reporte.id,
-      'Fecha': reporte.fecha,
-      'Código Celular': reporte.celular?.codigoInterno || '',
-      'Marca': reporte.celular?.marca || '',
-      'Modelo': reporte.celular?.modelo || '',
-      'Número Serie': reporte.celular?.numeroSerie || '',
-      'Estado Celular': reporte.celular?.estado || '',
-      'Roturas': reporte.celular?.cantRoturas || 0,
-      'Templado': reporte.celular?.tieneTemplado ? 'Sí' : 'No',
-      'Funda': reporte.celular?.tieneFunda ? 'Sí' : 'No',
-      'Usuario Reparto': reporte.usuario?.numReparto || '',
-      'Zona': reporte.usuario?.zona || '',
-      'Región': reporte.usuario?.region || '',
-      'Cargo': reporte.usuario?.cargo || '',
-      'Línea': reporte.usuario?.numeroLinea || '',
-      'Celulares Rotos Usuario': reporte.usuario?.cantCelularesRotos || 0,
-      'Descripción': reporte.descripcion || '',
-      'Tipo Movimiento': reporte.tipo || ''
-    }));
-
-    // Generar nombre del archivo basado en filtros aplicados
-    let nombreArchivo = 'reportes_roturas';
-    if (filtrosReportes.numReparto) {
-      nombreArchivo += `_usuario_${filtrosReportes.numReparto}`;
-    }
-    if (filtrosReportes.fechaInicio && filtrosReportes.fechaFin) {
-      nombreArchivo += `_${filtrosReportes.fechaInicio}_${filtrosReportes.fechaFin}`;
-    }
-    nombreArchivo += `_${new Date().toISOString().split('T')[0]}.xlsx`;
-
-    // Usar el servicio de Excel existente
-    excelService.exportarReportesRoturas(datosExcel, nombreArchivo);
-    
-    showNotification(`${reportesRoturas.value.length} reportes exportados correctamente`, 'success');
-  } catch (error) {
-    console.error('Error al exportar reportes:', error);
-    showNotification(`Error al exportar reportes: ${error.message}`, 'error');
-  }
-};
-
 // Métodos de paginación
 const onPageChangedCelulares = (page) => {
   currentPageCelulares.value = page;
@@ -603,6 +717,13 @@ const onItemsPerPageChangedMovimientos = (itemsPerPage) => {
 // Lifecycle
 onMounted(() => {
   cargarDatos();
+  // Agregar listener para cerrar dropdowns al hacer clic fuera
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  // Remover listener al desmontar el componente
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
@@ -683,7 +804,7 @@ onMounted(() => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
             </svg>
             <span class="text-sm sm:text-lg">Movimientos</span>
-            <span v-if="activeTab === 'movimientos'" class="bg-white/20 px-2 py-1 rounded-lg text-xs font-bold">{{ movimientos.length }}</span>
+            <span v-if="activeTab === 'movimientos'" class="bg-white/20 px-2 py-1 rounded-lg text-xs font-bold">{{ totalMovimientos }}</span>
           </button>
           <button @click="activeTab = 'reportar-roto'"
                   :class="[
@@ -702,22 +823,24 @@ onMounted(() => {
 
       <!-- Contenido de las pestañas -->
       <div v-if="activeTab === 'celulares'" class="space-y-8">
-        <!-- Formulario de celular moderno -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
-          <CelularForm 
-            ref="celularFormRef"
-            :celular="editingCelular"
-            :loading="loadingCelular"
-            @save="guardarCelular"
-            @cancel="cancelarEdicion"
-          />
-        </div>
-        
         <!-- Filtros modernos -->
         <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Filtros de Búsqueda</h3>
+              <p class="text-sm text-gray-500 mt-1">Filtra los celulares por diferentes criterios</p>
+            </div>
+            <button 
+              @click="showCelularModal = true"
+              class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Nuevo Celular
+            </button>
+          </div>
           <CelularFilters @filter="aplicarFiltros" />
         </div>
-
         <!-- Tabla de celulares moderna -->
         <div class="bg-white/70 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 lg:p-8 overflow-hidden">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 lg:mb-6 gap-4">
@@ -814,7 +937,9 @@ onMounted(() => {
                       </span>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap min-w-[90px]">
-                      <span v-if="celular.usuario" class="text-sm text-gray-900">{{ celular.usuario.numReparto }}</span>
+                      <span v-if="celular.usuario?.numReparto || celular.numRepartoUsuario" class="text-sm text-gray-900">
+                        {{ celular.usuario?.numReparto || celular.numRepartoUsuario }}
+                      </span>
                       <span v-else class="text-xs text-gray-400 italic">Sin asignar</span>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap min-w-[100px] text-center">
@@ -946,20 +1071,24 @@ onMounted(() => {
       <div v-else-if="activeTab === 'movimientos'" class="space-y-8">
         <!-- Filtros de movimientos modernos -->
         <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Filtros de Búsqueda</h3>
+              <p class="text-sm text-gray-500 mt-1">Filtra los movimientos por diferentes criterios</p>
+            </div>
+            <button 
+              @click="showMovimientoModal = true"
+              class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-105">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Nuevo Movimiento
+            </button>
+          </div>
           <MovimientoFilters 
             :usuarios="usuarios"
             :celulares="celulares"
             @filter="aplicarFiltrosMovimientos" 
-          />
-        </div>
-        
-        <!-- Formulario de movimientos moderno -->
-        <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 relative overflow-visible">
-          <MovimientoForm 
-            :celulares="celulares"
-            :usuarios="usuarios"
-            :loading="loadingMovimiento"
-            @save="guardarMovimiento"
           />
         </div>
 
@@ -1035,6 +1164,7 @@ onMounted(() => {
                     <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[140px]">Fecha</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Tipo</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Celular</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">Estado</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Usuario</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[200px]">Descripción</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Acciones</th>
@@ -1045,8 +1175,8 @@ onMounted(() => {
                       :key="movimiento.id" 
                       class="hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 transition-all duration-200 group">
                     <td class="px-6 py-4 whitespace-nowrap min-w-[140px]">
-                      <div class="text-sm font-medium text-gray-900">{{ new Date(movimiento.fecha).toLocaleDateString() }}</div>
-                      <div class="text-xs text-gray-500">{{ new Date(movimiento.fecha).toLocaleTimeString() }}</div>
+                      <div class="text-sm font-medium text-gray-900">{{ formatearFecha(movimiento.fecha) }}</div>
+                      <div class="text-xs text-gray-500">{{ formatearHora(movimiento.fecha) }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap min-w-[120px]">
                       <span :class="{
@@ -1066,13 +1196,25 @@ onMounted(() => {
                           </svg>
                         </div>
                         <div class="ml-3">
-                          <div class="text-sm font-semibold text-gray-900">{{ movimiento.celular?.numeroSerie }}</div>
+                          <div class="text-sm font-semibold text-gray-900">{{ movimiento.celular?.codigoInterno }}</div>
                           <div class="text-xs text-gray-500">{{ movimiento.celular?.marca }} {{ movimiento.celular?.modelo }}</div>
                         </div>
                       </div>
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap min-w-[100px]">
+                      <span :class="{
+                        'inline-flex px-2 py-1 text-xs font-medium rounded-full': true,
+                        'bg-green-100 text-green-800': movimiento.estadoCelular === 'NUEVO',
+                        'bg-yellow-100 text-yellow-800': movimiento.estadoCelular === 'REACONDICIONADO',
+                        'bg-red-100 text-red-800': movimiento.estadoCelular === 'ROTO'
+                      }">
+                        {{ movimiento.estadoCelular === 'REACONDICIONADO' ? 'REAC' : movimiento.estadoCelular || '-' }}
+                      </span>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap min-w-[150px]">
-                      <div class="text-sm font-medium text-gray-900">{{ movimiento.usuario?.numReparto }}</div>
+                      <div class="text-sm font-medium text-gray-900">
+                        {{ movimiento.usuario?.numReparto || movimiento.numRepartoUsuario || '-' }}
+                      </div>
                     </td>
                     <td class="px-6 py-4 min-w-[200px]">
                       <div class="text-sm text-gray-700 max-w-xs truncate" :title="movimiento.descripcion">
@@ -1204,7 +1346,8 @@ onMounted(() => {
 
           <form @submit.prevent="reportarCelularRoto" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              <!-- Campo Código Interno con autocompletado -->
+              <div ref="codigosDropdownRef" class="relative">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Código Interno *
                 </label>
@@ -1212,12 +1355,28 @@ onMounted(() => {
                   v-model="reporteForm.codigoInterno"
                   type="text" 
                   required
+                  @focus="showCodigosDropdown = true"
                   class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   placeholder="Ej: SAM001"
                 />
+                <!-- Dropdown de códigos -->
+                <div v-if="showCodigosDropdown && codigosFiltrados.length > 0" 
+                     class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto">
+                  <div 
+                    v-for="celular in codigosFiltrados.slice(0, 10)" 
+                    :key="celular.numeroSerie"
+                    @click="reporteForm.codigoInterno = celular.codigoInterno; showCodigosDropdown = false"
+                    class="px-4 py-3 hover:bg-red-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                  >
+                    <div class="font-semibold text-gray-900">{{ celular.codigoInterno }}</div>
+                    <div class="text-sm text-gray-600">{{ celular.marca }} {{ celular.modelo }}</div>
+                    <div class="text-xs text-gray-500">Estado: {{ celular.estado }}</div>
+                  </div>
+                </div>
               </div>
               
-              <div>
+              <!-- Campo Número de Reparto con autocompletado -->
+              <div ref="usuariosDropdownRef" class="relative">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Número de Reparto *
                 </label>
@@ -1225,9 +1384,24 @@ onMounted(() => {
                   v-model="reporteForm.numReparto"
                   type="text" 
                   required
+                  @focus="showUsuariosDropdown = true"
                   class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   placeholder="Ej: norte123"
                 />
+                <!-- Dropdown de usuarios -->
+                <div v-if="showUsuariosDropdown && usuariosFiltrados.length > 0" 
+                     class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto">
+                  <div 
+                    v-for="usuario in usuariosFiltrados.slice(0, 10)" 
+                    :key="usuario.id"
+                    @click="reporteForm.numReparto = usuario.numReparto; showUsuariosDropdown = false"
+                    class="px-4 py-3 hover:bg-red-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                  >
+                    <div class="font-semibold text-gray-900">{{ usuario.numReparto }}</div>
+                    <div class="text-sm text-gray-600">{{ usuario.nombre }} {{ usuario.apellido }}</div>
+                    <div class="text-xs text-gray-500">{{ usuario.region }} - {{ usuario.zona }}</div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1314,200 +1488,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Nueva sección: Consultar Reportes de Roturas -->
-      <div class="bg-white/30 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="p-3 bg-gradient-to-br from-blue-600 to-cyan-700 rounded-2xl">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-700 to-cyan-700 bg-clip-text text-transparent">
-            📋 Consultar Reportes de Roturas
-          </h3>
-        </div>
-
-        <!-- Filtros de consulta -->
-        <div class="space-y-6 mb-8">
-          <!-- Filtro por usuario -->
-          <div class="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-            <h4 class="font-semibold text-gray-800 mb-4">🔍 Buscar por Usuario</h4>
-            <div class="flex gap-4">
-              <input 
-                v-model="filtrosReportes.numReparto"
-                type="text" 
-                class="flex-1 px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Número de reparto (ej: 9)"
-              />
-              <button
-                @click="consultarReportesPorUsuario"
-                :disabled="loadingReportes"
-                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <svg v-if="loadingReportes" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                {{ loadingReportes ? 'Buscando...' : 'Buscar' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Filtro por fechas -->
-          <div class="bg-white/40 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-            <h4 class="font-semibold text-gray-800 mb-4">📅 Buscar por Rango de Fechas</h4>
-            <div class="flex gap-4">
-              <div class="flex-1">
-                <label class="block text-sm text-gray-600 mb-2">Fecha Inicio</label>
-                <input 
-                  v-model="filtrosReportes.fechaInicio"
-                  type="date" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div class="flex-1">
-                <label class="block text-sm text-gray-600 mb-2">Fecha Fin</label>
-                <input 
-                  v-model="filtrosReportes.fechaFin"
-                  type="date" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div class="flex flex-col justify-end">
-                <button
-                  @click="consultarReportesPorFecha"
-                  :disabled="loadingReportes"
-                  class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <svg v-if="loadingReportes" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                  {{ loadingReportes ? 'Buscando...' : 'Buscar' }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Botones de acción -->
-          <div class="flex gap-4">
-            <button
-              @click="consultarTodosLosReportes"
-              :disabled="loadingReportes"
-              class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg v-if="loadingReportes" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-              </svg>
-              {{ loadingReportes ? 'Cargando...' : 'Ver Todos los Reportes' }}
-            </button>
-            <button
-              @click="exportarReportesRoturas"
-              :disabled="reportesRoturas.length === 0"
-              class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              Exportar Excel
-            </button>
-            <button
-              @click="limpiarFiltrosReportes"
-              class="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-              Limpiar
-            </button>
-          </div>
-        </div>
-
-        <!-- Tabla de resultados -->
-        <div v-if="reportesRoturas.length > 0" class="bg-white/50 backdrop-blur-sm rounded-2xl border border-white/30 overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50/70">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white/30 divide-y divide-gray-200">
-                <tr v-for="reporte in reportesRoturas" :key="reporte.id" class="hover:bg-white/40 transition-colors duration-200">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ reporte.id }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ reporte.fecha }}</td>
-                  <td class="px-6 py-4 text-sm text-gray-900">
-                    <div>
-                      <div class="font-medium">{{ reporte.celular?.marca }} {{ reporte.celular?.modelo }}</div>
-                      <div class="text-xs text-gray-500">
-                        Código: {{ reporte.celular?.codigoInterno }} | Serie: {{ reporte.celular?.numeroSerie }}
-                      </div>
-                      <div class="text-xs">
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                              :class="{
-                                'bg-red-100 text-red-800': reporte.celular?.estado === 'ROTO',
-                                'bg-green-100 text-green-800': reporte.celular?.estado === 'DISPONIBLE',
-                                'bg-blue-100 text-blue-800': reporte.celular?.estado === 'ASIGNADO'
-                              }">
-                          {{ reporte.celular?.estado }}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-900">
-                    <div>
-                      <div class="font-medium">{{ reporte.usuario?.numReparto }}</div>
-                      <div class="text-xs text-gray-500">
-                        {{ reporte.usuario?.zona }} - {{ reporte.usuario?.region }}
-                      </div>
-                      <div class="text-xs text-gray-500">{{ reporte.usuario?.cargo }}</div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" :title="reporte.descripcion">
-                    {{ reporte.descripcion }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                          :class="{
-                            'bg-red-100 text-red-800': reporte.tipo === 'DEVOLUCION',
-                            'bg-blue-100 text-blue-800': reporte.tipo === 'ASIGNACION'
-                          }">
-                      {{ reporte.tipo }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Resumen -->
-          <div class="bg-gray-50/70 px-6 py-3 border-t border-gray-200">
-            <p class="text-sm text-gray-600">
-              <span class="font-medium">Total de reportes encontrados:</span> {{ reportesRoturas.length }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Estado vacío -->
-        <div v-else-if="!loadingReportes && (filtrosReportes.numReparto || filtrosReportes.fechaInicio || filtrosReportes.fechaFin)" class="text-center py-12 text-gray-500">
-          <div class="text-6xl mb-4">📋</div>
-          <p class="text-lg font-medium">No se encontraron reportes con los filtros aplicados</p>
-          <p class="text-sm mt-2">Intenta con otros criterios de búsqueda</p>
-        </div>
-      </div>
-
     <!-- Modal de edición de movimiento -->
     <MovimientoEditModal
       :show="showEditMovimientoModal"
@@ -1590,6 +1570,89 @@ onMounted(() => {
               Eliminar
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Nuevo Movimiento -->
+    <div v-if="showMovimientoModal" 
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+         @click.self="showMovimientoModal = false">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 animate-in"
+           @click.stop>
+        <!-- Header del Modal -->
+        <div class="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-3xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-white/20 rounded-2xl">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold">Nuevo Movimiento</h2>
+                <p class="text-green-100 text-sm mt-1">Registra un movimiento de celular</p>
+              </div>
+            </div>
+            <button @click="showMovimientoModal = false" 
+                    class="p-2 hover:bg-white/20 rounded-xl transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido del Modal -->
+        <div class="p-6">
+          <MovimientoForm 
+            :celulares="celulares"
+            :usuarios="usuarios"
+            :loading="loadingMovimiento"
+            @save="guardarMovimientoYCerrar"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Nuevo Celular -->
+    <div v-if="showCelularModal" 
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+         @click.self="showCelularModal = false">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 animate-in"
+           @click.stop>
+        <!-- Header del Modal -->
+        <div class="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-3xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-white/20 rounded-2xl">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold">{{ editingCelular ? 'Editar Celular' : 'Nuevo Celular' }}</h2>
+                <p class="text-blue-100 text-sm mt-1">{{ editingCelular ? 'Modifica los datos del celular' : 'Agrega un nuevo celular al inventario' }}</p>
+              </div>
+            </div>
+            <button @click="showCelularModal = false; editingCelular = null" 
+                    class="p-2 hover:bg-white/20 rounded-xl transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido del Modal -->
+        <div class="p-6">
+          <CelularForm 
+            ref="celularFormRef"
+            :celular="editingCelular"
+            :loading="loadingCelular"
+            @save="guardarCelularYCerrar"
+            @cancel="showCelularModal = false; editingCelular = null"
+          />
         </div>
       </div>
     </div>

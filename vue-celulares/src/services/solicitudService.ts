@@ -1,9 +1,8 @@
 import http from './http';
 
-// Usamos http (axios compartido con interceptor de Authorization)
+
 const api = http;
 
-// Enums reemplazados por objetos constantes para evitar restricciones de compilación
 export const Region = {
   NORTE: 'NORTE',
   SUR: 'SUR',
@@ -21,7 +20,6 @@ export const Region = {
 } as const;
 export type RegionType = typeof Region[keyof typeof Region];
 
-// Tipos
 export type TipoSolicitud = 'CAMBIO_POR_ROTURA' | 'NUEVO_EQUIPO' | 'ROBO';
 export const EstadoSolicitud = {
   PENDIENTE: 'PENDIENTE',
@@ -47,31 +45,25 @@ export interface Solicitud {
 const API_URL = '/api/solicitudes';
 
 export const solicitudService = {
-  // Obtener todas las solicitudes (admin)
   obtenerTodas() {
   return api.get<Solicitud[]>(API_URL);
   },
 
-  // Crear nueva solicitud
   crear(solicitud: Solicitud) {
   return api.post<Solicitud>(API_URL, solicitud);
   },
 
-  // Cambiar estado de solicitud (admin)
   cambiarEstado(id: string, estado: EstadoSolicitudType) {
   return api.put(`${API_URL}/${id}/estado`, { estado });
   },
 
-  // Obtener solicitudes de un usuario
   obtenerPorUsuario(usuario: string) {
   return api.get<Solicitud[]>(`${API_URL}/usuario/${usuario}`);
   },
 
-  // Adjuntar denuncia PDF para solicitudes de ROBO
   adjuntarDenuncia(id: string, archivo: File) {
     const formData = new FormData();
     formData.append('archivo', archivo);
-    
     return api.post(`${API_URL}/${id}/denuncia`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -79,7 +71,6 @@ export const solicitudService = {
     });
   },
 
-  // Descargar denuncia PDF
   descargarDenuncia(id: string) {
     return api.get(`${API_URL}/${id}/denuncia`, {
       responseType: 'blob',

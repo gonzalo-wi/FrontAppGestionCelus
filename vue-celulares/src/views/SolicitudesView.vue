@@ -247,7 +247,6 @@
               <table class="w-full divide-y divide-gray-200/50" style="min-width: 1200px;">
                 <thead class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
                   <tr>
-                    <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-20">ID</th>
                     <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[150px]">Solicitante</th>
                     <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[120px]">Usuario</th>
                     <th class="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">Región</th>
@@ -263,13 +262,6 @@
                 <tr v-for="solicitud in solicitudesPaginadas" 
                     :key="solicitud.id" 
                     class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group">
-                  <td class="px-4 py-4 whitespace-nowrap w-20">
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span class="text-xs font-bold text-white">#{{ solicitud.id }}</span>
-                      </div>
-                    </div>
-                  </td>
                   <td class="px-4 py-4 whitespace-nowrap min-w-[150px]">
                     <div class="text-sm font-semibold text-gray-900">{{ solicitud.nomSolicitante }}</div>
                   </td>
@@ -461,14 +453,9 @@
                  :key="solicitud.id" 
                  class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300">
               <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span class="text-sm font-bold text-white">#{{ solicitud.id }}</span>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-gray-900">{{ solicitud.nomSolicitante }}</h3>
-                    <p class="text-sm text-gray-600">{{ solicitud.usuario }}</p>
-                  </div>
+                <div>
+                  <h3 class="font-bold text-gray-900">{{ solicitud.nomSolicitante }}</h3>
+                  <p class="text-sm text-gray-600">{{ solicitud.usuario }}</p>
                 </div>
                 <span 
                   :class="{
