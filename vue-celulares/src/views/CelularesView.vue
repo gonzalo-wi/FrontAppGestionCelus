@@ -192,7 +192,10 @@ const movimientoColumns = [
 
 // Computed
 const celularesFiltrados = computed(() => {
-  if (!filters.value || Object.keys(filters.value).length === 0) {
+  // Verificar si hay algún filtro con valor (no vacío)
+  const hayFiltrosActivos = filters.value && Object.values(filters.value).some(v => v !== '' && v !== null && v !== undefined);
+  
+  if (!hayFiltrosActivos) {
     return celulares.value;
   }
   
@@ -215,8 +218,25 @@ const celularesFiltrados = computed(() => {
       return false;
     }
     
-    if (usuario && (!celular.usuario || !celular.usuario.numReparto.toLowerCase().includes(usuario.toLowerCase()))) {
-      return false;
+    if (usuario) {
+      const searchTerm = usuario.toLowerCase().trim();
+      
+      // El backend devuelve numRepartoUsuario como string con el nombre del usuario
+      const numRepartoUsuario = (celular.numRepartoUsuario?.toString() || '').toLowerCase();
+      
+      // También revisar si existe el objeto usuario (por compatibilidad)
+      const numRepartoObj = (celular.usuario?.numReparto?.toString() || '').toLowerCase();
+      const nombre = (celular.usuario?.nombre?.toString() || '').toLowerCase();
+      const apellido = (celular.usuario?.apellido?.toString() || '').toLowerCase();
+      
+      const matches = numRepartoUsuario.includes(searchTerm) || 
+                      numRepartoObj.includes(searchTerm) || 
+                      nombre.includes(searchTerm) || 
+                      apellido.includes(searchTerm);
+      
+      if (!matches) {
+        return false;
+      }
     }
     
     if (asignado === 'true' && !celular.usuario) {
