@@ -65,7 +65,7 @@ export const movimientoService = {
   probarTiposMovimiento: async () => {
     const tiposParaProbar = ['ASIGNACION', 'CAMBIO', 'DEVOLUCION', 'REPARACION', 'BAJA'];
     
-    for (const tipo of tiposParaProbar) {
+    for (let i = 0; i < tiposParaProbar.length; i++) {
       try {
         // Solo logging de tipos válidos, sin crear variables innecesarias
       } catch (error: any) {

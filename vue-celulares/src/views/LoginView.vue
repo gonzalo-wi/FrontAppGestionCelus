@@ -231,8 +231,6 @@ const login = async () => {
     loginStatus.value = 'Cargando perfil de usuario...';
     
     if (success) {
-      const user = authService.getCurrentUser();
-      
       await new Promise(resolve => setTimeout(resolve, 400));
       loginStatus.value = '¡Bienvenido! Redirigiendo...';
       
